@@ -1,0 +1,12 @@
+{
+  "ancho_m": 5994.8,
+  "alto_m": 6000.0,
+  "oeste": 77.36664268165008,
+  "este": 77.47335731834991,
+  "sur": 18.409388185425655,
+  "norte": 18.510611814574347,
+  "pendiente_max": 25,
+  "rugosidad_max": 1.0,
+  "tiene_rugosidad": true,
+  "capas_extra": []
+}

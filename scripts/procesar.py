@@ -1,10 +1,15 @@
 # procesar.py
 # Recorta la zona de la caminata, calcula la pendiente y genera los archivos
 # ligeros que usa la app web (PNG de cada capa + cuadricula JSON).
-# Uso:  python scripts/procesar.py
+# Uso:
+#   python scripts/procesar.py                 -> procesa Jezero (zona por defecto)
+#   python scripts/procesar.py --zona gale     -> procesa la zona que bajo descargar_zona.py
+# Cada zona queda en docs/data/zonas/<zona>/ y se agrega a docs/data/zonas.json
 
+import argparse
 import json
 import math
+import shutil
 from pathlib import Path
 
 import numpy as np
@@ -16,15 +21,21 @@ from matplotlib import colormaps
 from PIL import Image
 
 # ---------------- CONFIGURACION (lo que normalmente vas a mover) ----------------
-DEM = "datos_crudos/dem_ctx.tif"       # modelo de elevacion (CTX, 20 m/pixel)
-FOTO = "datos_crudos/foto_ctx.tif"     # ortofoto (CTX, 6 m/pixel)
-HIRISE = "datos_crudos/hirise_dtm.tif" # DEM de detalle (HiRISE, 1 m/pixel). Si no existe, se salta
-ORTO_HIRISE = "datos_crudos/hirise_orto.tif"  # foto HiRISE de 25 cm (opcional, para el casco)
-SALIDA = Path("docs/data")             # aqui quedan los archivos para la web
-
+# Valores de Jezero. Se usan cuando la zona no trae su propio zona.json
+# (las zonas que baja descargar_zona.py si lo traen y mandan sobre esto).
+ZONA_DEFAULT = "jezero"
+NOMBRE_DEFAULT = "Crater Jezero"
 CENTRO_LAT = 18.46     # centro de la zona de la caminata (grados norte)
 CENTRO_LON = 77.42     # (grados este)
 TAMANO_KM = 6          # lado del cuadrado que recortamos
+
+# Nombres de los archivos dentro de la carpeta de la zona
+#   datos_crudos/<zona>/   o, si esa carpeta no existe, datos_crudos/ (como estaba Jezero)
+ARCH_DEM = "dem_ctx.tif"            # modelo de elevacion (CTX, 20 m/pixel)
+ARCH_FOTO = "foto_ctx.tif"          # ortofoto (CTX, 6 m/pixel)
+ARCH_HIRISE = "hirise_dtm.tif"      # DEM de detalle (HiRISE, 1 m/pixel). Si no existe, se salta
+ARCH_ORTO_HIRISE = "hirise_orto.tif"  # foto HiRISE (opcional, para el casco)
+CELDA_M = 20          # tamano de casilla de la cuadricula (m). Si el DEM es mas fino, se promedia a esto
 PENDIENTE_MAX = 25     # grados; arriba de esto la celda queda bloqueada
 RUGOSIDAD_MAX = 1.0    # metros; arriba de esto la celda queda bloqueada (ajustar con datos reales)
 LADO_FOTO = 1500       # pixeles maximos de la foto (para que pese poco)
@@ -33,12 +44,52 @@ TESELA_M = 250         # mosaicos de HiRISE para el casco: lado de cada uno (m)
 PASO_TESELA_M = 2      # resolucion de los mosaicos (m). Con 4 pesan 4 veces menos
 FOTO_TESELA_PX = 512   # pixeles por lado de cada foto de mosaico (512 = ~50 cm por pixel)
 
-# Capas extra (para el 13 de noviembre): (archivo, nombre, colormap, etiqueta)
+# Capas extra: (archivo dentro de la carpeta de la zona, nombre, colormap, etiqueta)
 # El nombre no lleva espacios ni acentos porque se vuelve nombre de archivo.
+# Si el archivo no esta en esa zona, la capa se salta.
 CAPAS_EXTRA = [
-    # ("datos_crudos/themis_dia.tif", "termica", "inferno", "Temperatura (THEMIS)"),
+    # ("themis_dia.tif", "termica", "inferno", "Temperatura (THEMIS)"),
 ]
 # ---------------------------------------------------------------------------------
+
+# Estas se llenan en configurar() segun la zona
+DEM = FOTO = HIRISE = ORTO_HIRISE = None
+CARPETA = None
+SALIDA = None
+
+
+def configurar(zona):
+    """Decide de donde se leen los datos y a donde se escriben, segun la zona."""
+    global DEM, FOTO, HIRISE, ORTO_HIRISE, CARPETA, SALIDA
+    global CENTRO_LAT, CENTRO_LON, TAMANO_KM
+    CARPETA = Path("datos_crudos") / zona
+    if not CARPETA.exists():
+        if zona != ZONA_DEFAULT:
+            raise SystemExit(f"No existe la carpeta {CARPETA}. Corre primero descargar_zona.py --zona {zona}")
+        CARPETA = Path("datos_crudos")   # Jezero, como lo teniamos antes
+    nombre = NOMBRE_DEFAULT if zona == ZONA_DEFAULT else zona
+    ficha = CARPETA / "zona.json"
+    if ficha.exists():
+        datos = json.loads(ficha.read_text(encoding="utf-8"))
+        CENTRO_LAT, CENTRO_LON = datos["lat"], datos["lon"]
+        TAMANO_KM = datos.get("km", TAMANO_KM)
+        nombre = datos.get("nombre", nombre)
+    else:
+        datos = {}
+    # zona.json puede decir como se llaman los archivos, para no tener que renombrarlos.
+    # Si un mosaico de 1 m se usa como "dem" y como "hirise" a la vez, se pone el mismo nombre en los dos.
+    DEM = str(CARPETA / datos.get("dem", ARCH_DEM))
+    FOTO = str(CARPETA / datos.get("foto", ARCH_FOTO))
+    HIRISE = str(CARPETA / datos.get("hirise", ARCH_HIRISE))
+    ORTO_HIRISE = str(CARPETA / datos.get("orto", ARCH_ORTO_HIRISE))
+    SALIDA = Path("docs/data/zonas") / zona
+    if not Path(DEM).exists():
+        raise SystemExit(f"No encuentro {DEM}. Revisa el nombre de la zona o corre primero descargar_zona.py")
+    if not Path(FOTO).exists():
+        raise SystemExit(f"No encuentro {FOTO}")
+    print(f"Zona: {nombre}  ({CENTRO_LAT:.4f} N, {CENTRO_LON:.4f} E, {TAMANO_KM} km)")
+    print(f"Leyendo de {CARPETA}  ->  escribiendo en {SALIDA}")
+    return nombre
 
 MARTE_LONLAT = f"+proj=longlat +R={RADIO_MARTE} +no_defs"
 
@@ -55,8 +106,9 @@ def a_lonlat(ds, x, y):
     return lons[0], lats[0]
 
 
-def recortar(ruta, limites, lado_max=None, forma=None, suave=False):
-    """Lee solo el cuadro que nos interesa. Si lado_max, lo reduce a ese tamano."""
+def recortar(ruta, limites, lado_max=None, forma=None, suave=False, promedio=False):
+    """Lee solo el cuadro que nos interesa. Si lado_max, lo reduce a ese tamano.
+    promedio=True junta varios pixeles en uno promediandolos (para bajar un DEM de 1 m a 20 m)."""
     with rasterio.open(ruta) as ds:
         ventana = from_bounds(*limites, transform=ds.transform)
         alto, ancho = round(ventana.height), round(ventana.width)
@@ -65,10 +117,13 @@ def recortar(ruta, limites, lado_max=None, forma=None, suave=False):
         elif lado_max and max(alto, ancho) > lado_max:
             f = lado_max / max(alto, ancho)
             alto, ancho = round(alto * f), round(ancho * f)
-        metodo = Resampling.bilinear if suave else Resampling.nearest
+        metodo = Resampling.average if promedio else (Resampling.bilinear if suave else Resampling.nearest)
         datos = ds.read(1, window=ventana, out_shape=(alto, ancho), resampling=metodo,
                         masked=True, boundless=True).astype("float32")
-        datos = np.ma.masked_less(datos, -1e10)  # nodata raro de USGS
+        # algunos archivos de USGS guardan enteros con escala y desplazamiento
+        datos = datos * (ds.scales[0] or 1) + (ds.offsets[0] or 0)
+        # nodata raros de USGS (-3.4e38, -32767...). En Marte nada esta abajo de -9 km
+        datos = np.ma.masked_less(datos, -20000)
         return datos.filled(np.nan)
 
 
@@ -204,6 +259,11 @@ def exportar_fotos_teselas(limites, escala_x, nx, ny, existentes):
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Procesa una zona de Marte para Martian Map")
+    parser.add_argument("--zona", default=ZONA_DEFAULT,
+                        help="nombre corto de la zona (carpeta en datos_crudos). Por defecto: jezero")
+    zona = parser.parse_args().zona.lower()
+    nombre = configurar(zona)
     SALIDA.mkdir(parents=True, exist_ok=True)
     mitad = TAMANO_KM * 1000 / 2
 
@@ -225,10 +285,19 @@ def main():
         este, norte = a_lonlat(ds, limites[2], limites[3])
 
     print("1) Recortando elevacion...")
-    z = recortar(DEM, limites)
-    alto, ancho = z.shape
-    dx = res_x * escala_x  # metros reales entre columnas
-    dy = res_y             # metros reales entre filas
+    if res_y < CELDA_M * 0.75:
+        # DEM mas fino que la casilla (por ejemplo un mosaico de 1 m): lo promediamos a CELDA_M
+        alto = round(2 * mitad / CELDA_M)
+        ancho = round(2 * mitad / CELDA_M)
+        print(f"  el DEM es de {res_y:.1f} m; se promedia a casillas de {CELDA_M} m")
+        z = recortar(DEM, limites, forma=(alto, ancho), promedio=True)
+        dx = 2 * mitad / ancho   # metros reales entre columnas
+        dy = 2 * mitad / alto    # metros reales entre filas
+    else:
+        z = recortar(DEM, limites)
+        alto, ancho = z.shape
+        dx = res_x * escala_x  # metros reales entre columnas
+        dy = res_y             # metros reales entre filas
     print(f"  {ancho} x {alto} celdas, celda de {dx:.1f} m x {dy:.1f} m")
 
     print("2) Calculando pendiente...")
@@ -250,6 +319,9 @@ def main():
         exportar_teselas(limites, ancho * dx, alto * dy, escala_x)
     else:
         print("  no esta", HIRISE, "-> se salta (la ruta solo usara pendiente)")
+        # si antes se proceso esta zona con HiRISE, borramos lo viejo para que no se mezcle
+        shutil.rmtree(SALIDA / "hirise", ignore_errors=True)
+        (SALIDA / "rugosidad.png").unlink(missing_ok=True)
 
     print("3) Generando capas PNG...")
     # Elevacion con colores (transparente donde no hay dato)
@@ -284,11 +356,15 @@ def main():
     guardar_png(rgba, "foto.png")
 
     capas_extra = []
-    for ruta, nombre, cmap, etiqueta in CAPAS_EXTRA:
-        valores = recortar(ruta, limites, lado_max=LADO_FOTO)
+    for archivo, nombre_capa, cmap, etiqueta in CAPAS_EXTRA:
+        ruta = CARPETA / archivo
+        if not ruta.exists():
+            print("  no esta", ruta, "-> se salta la capa", nombre_capa)
+            continue
+        valores = recortar(str(ruta), limites, lado_max=LADO_FOTO)
         rgba, vmin, vmax = colorear(valores, cmap)
-        guardar_png(rgba, nombre + ".png")
-        capas_extra.append({"nombre": nombre, "etiqueta": etiqueta,
+        guardar_png(rgba, nombre_capa + ".png")
+        capas_extra.append({"nombre": nombre_capa, "etiqueta": etiqueta,
                             "min": round(vmin, 2), "max": round(vmax, 2)})
 
     print("4) Guardando cuadricula para la ruta...")
@@ -307,6 +383,7 @@ def main():
     (SALIDA / "cuadricula.json").write_text(json.dumps(cuadricula, separators=(",", ":")))
 
     info = {
+        "nombre": nombre,
         "ancho_m": round(ancho * dx, 1),
         "alto_m": round(alto * dy, 1),
         "oeste": oeste, "este": este, "sur": sur, "norte": norte,
@@ -315,8 +392,29 @@ def main():
         "tiene_rugosidad": rug is not None,
         "capas_extra": capas_extra,
     }
-    (SALIDA / "info.json").write_text(json.dumps(info, indent=2))
+    (SALIDA / "info.json").write_text(json.dumps(info, indent=2, ensure_ascii=False), encoding="utf-8")
     print("  listo:", SALIDA / "cuadricula.json", "y", SALIDA / "info.json")
+
+    # Puntos de interes: si la zona no tiene, se crea la lista vacia para llenarla a mano.
+    # Para Jezero se copia el poi.json que ya teniamos en docs/data.
+    poi = SALIDA / "poi.json"
+    if not poi.exists():
+        viejo = Path("docs/data/poi.json")
+        if zona == ZONA_DEFAULT and viejo.exists():
+            shutil.copy(viejo, poi)
+        else:
+            poi.write_text("[]\n", encoding="utf-8")
+        print("  creado", poi)
+
+    # Lista de zonas para el selector de la pagina
+    lista_ruta = Path("docs/data/zonas.json")
+    lista = json.loads(lista_ruta.read_text(encoding="utf-8")) if lista_ruta.exists() else []
+    lista = [z for z in lista if z["id"] != zona]
+    lista.append({"id": zona, "nombre": nombre,
+                  "lat": round(CENTRO_LAT, 4), "lon": round(CENTRO_LON, 4)})
+    lista.sort(key=lambda z: z["nombre"])
+    lista_ruta.write_text(json.dumps(lista, indent=2, ensure_ascii=False), encoding="utf-8")
+    print(f"  {lista_ruta} tiene {len(lista)} zona(s)")
 
 
 if __name__ == "__main__":

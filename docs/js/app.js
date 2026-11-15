@@ -49,13 +49,40 @@ async function elegirZona() {
   });
 }
 
+// La zona esta en zonas.json pero sus datos no se han procesado: en vez de un mapa vacio,
+// se dice que falta y como hacerlo, con un boton para volver al primer sitio.
+async function zonaSinDatos() {
+  const id = DATOS.split("/").filter(Boolean).pop();
+  const archivos = ["info.json", "cuadricula.json", "foto.png", "elevacion.png", "pendiente.png"];
+  const faltan = [];
+  for (const a of archivos) {
+    try { const r = await fetch(DATOS + a, { method: "HEAD" }); if (!r.ok) faltan.push(a); } catch { faltan.push(a); }
+  }
+  const caja = document.getElementById("mapa");
+  caja.innerHTML = `<div class="zona-sin-datos">
+    <h2>${t("zsd_titulo")}</h2>
+    <p>${t("zsd_texto", { z: id })}</p>
+    <p class="tenue">${t("zsd_faltan")}: <code>${faltan.join(", ") || "?"}</code></p>
+    <pre>python scripts/procesar.py --zona ${id}
+python scripts/crateres.py --zona ${id}
+python scripts/validar_crateres.py --zona ${id}
+python scripts/aterrizaje.py --zona ${id}</pre>
+    <a class="btn-principal" href="?zona=jezero">${t("zsd_volver")}</a>
+  </div>`;
+}
+
 async function iniciar() {
   await elegirZona();
-  [info, cuad, pois] = await Promise.all([
-    cargarJSON(DATOS + "info.json"),
-    cargarJSON(DATOS + "cuadricula.json"),
-    cargarJSON(DATOS + "poi.json").catch(() => []),
-  ]);
+  try {
+    [info, cuad, pois] = await Promise.all([
+      cargarJSON(DATOS + "info.json"),
+      cargarJSON(DATOS + "cuadricula.json"),
+      cargarJSON(DATOS + "poi.json").catch(() => []),
+    ]);
+  } catch {
+    await zonaSinDatos();
+    return;
+  }
   if (info.nombre) {
     document.getElementById("nombre-zona").textContent = info.nombre;
     document.title = "Martian Map - " + info.nombre;

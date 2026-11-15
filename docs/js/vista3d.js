@@ -196,7 +196,7 @@ function dibujarMision() {
     }
     if (masLarga) {
       const [lat, lng] = masLarga[Math.floor(masLarga.length / 2)];
-      const s = letrero("Perseverance traverse", "#ffffff", 170, true);
+      const s = letrero(t("rover_3d"), "#ffffff", 170, true);
       s.position.copy(a3D(lat, lng, 180));
       grupoMision.add(s);
     }
@@ -207,8 +207,8 @@ function dibujarMision() {
     const s = letrero(k === 0 ? "H" : String(k), k === 0 ? "#e8794a" : "#00e5ff", 160);
     s.position.copy(celdaA3D(c, 200));
     s.userData.lugar = lugares.length; // al tocar el letrero, la camara va a este punto
-    lugares.push({ nombre: k === 0 ? "Habitat" : `${k} · ${nombreParada(k)}`, pos: celdaA3D(c, 0),
-      tipo: k === 0 ? "habitat" : "parada", k, celda: c, titulo: k === 0 ? "Habitat" : nombreParada(k) });
+    lugares.push({ nombre: k === 0 ? t("habitat") : `${k} · ${nombreParada(k)}`, pos: celdaA3D(c, 0),
+      tipo: k === 0 ? "habitat" : "parada", k, celda: c, titulo: nombreParada(k) });
     grupoMision.add(s);
   });
 
@@ -233,7 +233,7 @@ function dibujarMision() {
 function llenarSelectorLugares() {
   const caja = document.getElementById("lugares3d");
   const color = (l) => (l.tipo === "habitat" ? "#F26B3A" : l.tipo === "poi" ? "#FFD23F" : "#4FD1E8");
-  caja.innerHTML = `<button data-i="-1"><span class="bolita"></span>Whole site</button>` +
+  caja.innerHTML = `<button data-i="-1"><span class="bolita"></span>${t("todo_sitio")}</button>` +
     lugares.map((l, i) => `<button data-i="${i}"><span class="bolita" style="background:${color(l)}"></span>${l.nombre}</button>`).join("");
   caja.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => irALugar(parseInt(b.dataset.i, 10))));
   document.getElementById("ficha3d").classList.add("oculto");
@@ -385,18 +385,18 @@ function puntosDeLaMision() {
 function iniciarRecorrido() {
   const puntos = puntosDeLaMision();
   if (puntos.length < 2) {
-    alert("First plan a mission on the 2D map (habitat and at least one stop).");
+    alert(t("a_sin_plan"));
     return;
   }
   recorrido = { curva: new THREE.CatmullRomCurve3(puntos), t: 0, duracion: 40 };
   controles.enabled = false;
-  document.getElementById("btn-recorrer").textContent = "Stop";
+  document.getElementById("btn-recorrer").textContent = t("detener");
 }
 
 function detenerRecorrido() {
   recorrido = null;
   controles.enabled = true;
-  document.getElementById("btn-recorrer").textContent = "Fly the route";
+  document.getElementById("btn-recorrer").textContent = t("recorrer");
 }
 
 function pasoRecorrido(dt) {
@@ -472,10 +472,12 @@ function cerrar3D() {
 
 function llenarSelectorCapas() {
   const caja = document.getElementById("capas3d");
-  const opciones = [["foto", "Photo"], ["elevacion", "Elevation"], ["pendiente", "Slope"]];
-  if (info.tiene_rugosidad) opciones.push(["rugosidad", "Roughness"]);
-  for (const e of info.capas_extra || []) opciones.push([e.nombre, e.nombre === "geologia" ? "Geology" : e.etiqueta]);
-  caja.innerHTML = opciones.map(([v, t]) => `<button data-capa="${v}">${t}</button>`).join("");
+  // cada boton lleva su clave de idioma para que cambie solo al cambiar de idioma
+  const opciones = [["foto", "c_foto"], ["elevacion", "c_elev"], ["pendiente", "c_pend"]];
+  if (info.tiene_rugosidad) opciones.push(["rugosidad", "c_rug"]);
+  for (const e of info.capas_extra || []) opciones.push([e.nombre, e.nombre === "geologia" ? "c_geo" : null, e.etiqueta]);
+  caja.innerHTML = opciones.map(([v, clave, texto]) =>
+    clave ? `<button data-capa="${v}" data-i18n="${clave}">${t(clave)}</button>` : `<button data-capa="${v}">${texto}</button>`).join("");
   caja.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
     caja.querySelectorAll("button").forEach((x) => x.classList.toggle("activo", x === b));
     ponerTextura(b.dataset.capa);
@@ -509,3 +511,17 @@ document.getElementById("ficha-ant").addEventListener("click", () => {
 document.getElementById("ficha-sig").addEventListener("click", () => {
   if (lugares.length) irALugar((lugarActual + 1) % lugares.length);
 });
+
+// Al cambiar de idioma: letreros 3D, lista "Go to" y ficha
+window.addEventListener("idioma", () => {
+  if (!renderer) return;
+  dibujarMision();
+  const antes = lugarActual;
+  llenarSelectorLugares();
+  if (antes >= 0 && lugares[antes]) irALugarSinVolar(antes);
+  if (!recorrido) document.getElementById("btn-recorrer").textContent = t("recorrer");
+});
+function irALugarSinVolar(i) {
+  document.querySelectorAll("#lugares3d button").forEach((b) => b.classList.toggle("activo", b.dataset.i === String(i)));
+  mostrarFicha(i);
+}

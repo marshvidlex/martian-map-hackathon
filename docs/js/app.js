@@ -84,7 +84,9 @@ async function iniciar() {
   // --- Capas extra (THEMIS, CRISM...): salen de info.json, no hay que tocar el HTML ---
   const contenedor = document.getElementById("capas-extra");
   for (const extra of info.capas_extra || []) {
-    const rango = extra.min !== undefined ? `<span class="nota">(${extra.min} to ${extra.max})</span>` : "";
+    const rango = extra.min !== undefined ? `<span class="nota">${t("rango", { min: extra.min, max: extra.max })}</span>` : "";
+    // las capas conocidas llevan su texto en los dos idiomas
+    const etiqueta = extra.nombre === "geologia" ? `<span data-i18n="capa_geologia">${t("capa_geologia")}</span>` : extra.etiqueta;
     // la capa geologica lleva su leyenda de colores (sale de info.geologia, la hace geologia.py)
     const leyenda = extra.nombre === "geologia" && info.geologia
       ? `<div class="leyenda">${info.geologia.map((u) =>
@@ -92,7 +94,7 @@ async function iniciar() {
       : "";
     contenedor.insertAdjacentHTML("beforeend", `
       <div class="capa">
-        <label><input type="checkbox" id="chk-${extra.nombre}"> ${extra.etiqueta} ${rango}</label>
+        <label><input type="checkbox" id="chk-${extra.nombre}"> ${etiqueta} ${rango}</label>
         <input type="range" id="op-${extra.nombre}" min="0" max="1" step="0.1" value="0.6">
         ${leyenda}
       </div>`);
@@ -119,7 +121,7 @@ async function iniciar() {
     if (p.lat < info.sur || p.lat > info.norte || p.lon < info.oeste || p.lon > info.este) continue;
     const foto = p.foto ? `<br><img src="${p.foto}" width="200" alt="${p.nombre}">` : "";
     L.circleMarker(lonlatAMapa(p.lon, p.lat), { radius: 8, color: "#ffd23f", fillOpacity: 0.8 })
-      .bindPopup(`<b>${p.nombre}</b><br>${p.que_estudiar}<br><i>Observed by: ${p.instrumento}</i>${foto}`)
+      .bindPopup(() => `<b>${p.nombre}</b><br>${p.que_estudiar}<br><i>${t("observado")}: ${p.instrumento}</i>${foto}`)
       .on("click", alTocarMapa) // tocar el punto tambien lo agrega a la mision
       .addTo(mapa);
   }
@@ -135,12 +137,12 @@ async function iniciar() {
   mapa.on("mousemove", (e) => {
     const caja = document.getElementById("coordenadas");
     const celda = mapaACelda(e.latlng);
-    if (celda === null) { caja.textContent = "Outside the map"; return; }
+    if (celda === null) { caja.textContent = t("fuera_mapa"); return; }
     const [lon, lat] = mapaALonlat(e.latlng);
     const z = cuad.elevacion[celda], p = cuad.pendiente[celda];
     caja.textContent = `${lat.toFixed(4)}° N · ${lon.toFixed(4)}° E` +
       (z > -99999 ? `   ${Math.round(z).toLocaleString("en-US")} m` : "") +
-      (p >= 0 ? `   slope ${(p / 10).toFixed(1)}°` : "");
+      (p >= 0 ? `   ${t("pendiente_corta")} ${(p / 10).toFixed(1)}°` : "");
   });
   document.getElementById("btn-borrar").addEventListener("click", borrarMision);
   document.getElementById("btn-quitar").addEventListener("click", quitarUltima);
@@ -178,7 +180,7 @@ async function cargarRecorridoRover() {
     L.polyline(l, { color: "#ffffff", weight: 2, opacity: 0.9, interactive: false })));
   document.getElementById("capas-extra").insertAdjacentHTML("beforeend", `
     <div class="capa"><label><input type="checkbox" id="chk-rover" checked>
-      Perseverance real traverse (NASA/JPL)</label></div>`);
+      <span data-i18n="capa_rover">${t("capa_rover")}</span></label></div>`);
   const chk = document.getElementById("chk-rover");
   capa.addTo(mapa);
   chk.addEventListener("change", () => (chk.checked ? capa.addTo(mapa) : capa.remove()));
@@ -234,27 +236,27 @@ function lonlatAMapa(lon, lat) {
 
 // Si la parada cae a menos de 150 m de un punto de interes, usamos su nombre
 function nombreParada(k) {
-  if (k === 0) return "Habitat";
+  if (k === 0) return t("habitat");
   const [y, x] = celdaAMapa(paradas[k]);
   for (const p of pois) {
     const [py, px] = lonlatAMapa(p.lon, p.lat);
     if (Math.hypot(px - x, py - y) < 150) return p.nombre;
   }
-  return `Stop ${k}`;
+  return t("parada_n", { n: k });
 }
 
 // ---------- Interaccion ----------
 function alTocarMapa(e) {
   const celda = mapaACelda(e.latlng);
   if (celda === null) {
-    texto("That point is outside the map. Tap inside the terrain.");
+    decir("i_fuera");
     return;
   }
 
   const params = leerParametros();
   if (bloqueada(cuad, celda, params)) {
     const p = cuad.pendiente[celda];
-    texto(`That point is blocked (${p < 0 ? "no data" : (p / 10).toFixed(0) + " degrees"}). Pick another one.`);
+    decir("i_bloqueado", { motivo: p < 0 ? t("sin_datos") : t("grados", { n: (p / 10).toFixed(0) }) });
     return;
   }
 
@@ -268,10 +270,10 @@ function alTocarMapa(e) {
   marcadores.push(L.marker(celdaAMapa(celda), { icon: icono }).addTo(mapa).bindTooltip(nombreParada(k)));
 
   if (k === 0) {
-    texto("Now tap the <b>first stop</b>.");
+    decir("i_primera");
     dibujarZonaRegreso();
   } else {
-    texto("Tap again to add another stop, or remove the last one.");
+    decir("i_otra");
     calcular();
   }
 }
@@ -309,7 +311,7 @@ function calcular() {
   console.log(`Mision calculada en ${(performance.now() - t0).toFixed(0)} ms`);
 
   if (m.error) {
-    texto(m.error + " Remove the last stop or pick another point.");
+    decir("i_error", { error: m.error });
     ocultarResultado();
     ultimaMision = null;
     actualizarHud();
@@ -346,21 +348,21 @@ function mostrarPanel(m, params) {
   v.textContent = m.go ? "GO" : "NO-GO";
   document.getElementById("tarjeta-veredicto").className = m.go ? "tarjeta-go" : "tarjeta-nogo";
   const numParadas = m.tramos.length - 1;
-  poner("resumen-paradas", `${numParadas} STOP${numParadas === 1 ? "" : "S"} · ROUND TRIP`);
+  poner("resumen-paradas", numParadas === 1 ? t("parada_resumen") : t("paradas_resumen", { n: numParadas }));
   ponerChips(m.go ? "go" : "nogo", `${m.go ? "GO" : "NO-GO"} · ${horas(m.total)} · O₂ ${m.oxigenoPct.toFixed(0)}%`);
 
   const motivos = [];
   if (!m.okOxigeno) {
-    motivos.push(`Not enough oxygen: the walk needs ${horas(m.total)} and there are ${horas(m.disponible)} without using the reserve.`);
-    if (m.alcanzables === 0) motivos.push("Not even the first stop is reachable. Pick a closer target.");
-    else if (m.alcanzables === 1) motivos.push("With this oxygen only stop 1 can be visited before returning.");
-    else motivos.push(`With this oxygen, stops 1 to ${m.alcanzables} can be visited before returning.`);
+    motivos.push(t("m_oxigeno", { necesita: horas(m.total), hay: horas(m.disponible) }));
+    if (m.alcanzables === 0) motivos.push(t("m_ninguna"));
+    else if (m.alcanzables === 1) motivos.push(t("m_una"));
+    else motivos.push(t("m_varias", { n: m.alcanzables }));
   }
   if (!m.okDosis) {
-    motivos.push(`The dose (${m.dosis.toFixed(2)} mSv) is over the ${params.limiteDosis} mSv limit.` +
-      (params.tormenta ? " There is a solar storm: stay in the habitat." : ""));
+    motivos.push(t("m_dosis", { dosis: m.dosis.toFixed(2), limite: params.limiteDosis }) +
+      (params.tormenta ? t("m_tormenta") : ""));
   }
-  if (m.go) motivos.push(`Safe margin: ${m.oxigenoPct.toFixed(0)}% of the oxygen is used and the reserve is untouched.`);
+  if (m.go) motivos.push(t("m_margen", { pct: m.oxigenoPct.toFixed(0) }));
   poner("motivo", motivos.join(" "));
 
   poner("r-distancia", `${m.distancia.toFixed(2)} km`);
@@ -380,12 +382,12 @@ function mostrarPanel(m, params) {
   // linea de tiempo: habitat, cada parada con su hora de llegada, y el regreso
   const llegadas = horariosMision(m, params.trabajo);
   const lista = document.getElementById("tramos");
-  let html = `<li><span class="punto habitat">H</span><span class="paso">Habitat · EVA start</span><span class="hora">T+0:00</span></li>`;
-  m.tramos.forEach((t, k) => {
+  let html = `<li><span class="punto habitat">H</span><span class="paso">${t("l_inicio")}</span><span class="hora">T+0:00</span></li>`;
+  m.tramos.forEach((tr, k) => {
     const regreso = k === m.tramos.length - 1;
-    const detalle = `${t.distancia.toFixed(2)} km · ${horas(t.tiempo)} walk` + (regreso ? "" : ` · ${horas(params.trabajo)} work`);
+    const detalle = `${tr.distancia.toFixed(2)} km · ${horas(tr.tiempo)} ${t("l_camina")}` + (regreso ? "" : ` · ${horas(params.trabajo)} ${t("l_trabajo")}`);
     html += regreso
-      ? `<li><span class="punto regreso">&#8617;</span><span class="paso">Return to habitat<small>${detalle}</small></span><span class="hora">${tMas(m.total)}</span></li>`
+      ? `<li><span class="punto regreso">&#8617;</span><span class="paso">${t("l_regreso")}<small>${detalle}</small></span><span class="hora">${tMas(m.total)}</span></li>`
       : `<li><span class="punto">${k + 1}</span><span class="paso">${nombreParada(k + 1)}<small>${detalle}</small></span><span class="hora">${tMas(llegadas[k + 1])}</span></li>`;
   });
   lista.innerHTML = html;
@@ -417,7 +419,7 @@ function ponerChips(clase, textoChip) {
 function ocultarResultado() {
   document.getElementById("resultado").classList.add("oculto");
   document.getElementById("sin-mision").classList.remove("oculto");
-  ponerChips("", "NO MISSION");
+  ponerChips("", t("sin_mision_chip"));
 }
 
 // Grafica de altura contra distancia de toda la mision, con lineas en cada parada
@@ -489,7 +491,7 @@ function dibujarZonaRegreso() {
   ctx.putImageData(img, 0, 0);
   capaRegreso = L.imageOverlay(canvas.toDataURL(), [[0, 0], [info.alto_m, info.ancho_m]], { className: "pixelada" })
     .addTo(mapa);
-  texto(`Green = you can walk back from there in ${horas(horasRegreso)} or less.`);
+  decir("i_regreso", { t: horas(horasRegreso) });
 }
 
 function actualizarHud() {
@@ -514,11 +516,11 @@ function actualizarHud() {
 // Solo se puede salir si la mision es GO: es la regla de seguridad antes de dejar la nave
 function aprobarMision() {
   if (!ultimaMision) {
-    texto("First plan a mission: place the <b>habitat</b> and at least one stop.");
+    decir("i_sin_plan");
     return;
   }
   if (!ultimaMision.go) {
-    texto("Cannot approve: the mission is NO-GO. Check the reason in the result and adjust the stops.");
+    decir("i_nogo");
     document.getElementById("motivo").scrollIntoView({ behavior: "smooth" });
     return;
   }
@@ -541,9 +543,24 @@ function borrarMision() {
   marcadores = []; lineas = []; paradas = []; capaRegreso = null; ultimaMision = null;
   ocultarResultado();
   actualizarHud();
-  texto("Tap the map to place the <b>habitat</b>.");
+  decir("i_habitat");
 }
 
+
+// Mensaje de "siguiente paso" que se puede volver a traducir si cambia el idioma
+let ultimoMensaje = { clave: "i_habitat", v: {} };
+function decir(clave, v = {}) {
+  ultimoMensaje = { clave, v };
+  texto(t(clave, v));
+}
+
+// Al cambiar de idioma: se vuelven a escribir los textos que arma este archivo
+window.addEventListener("idioma", () => {
+  texto(t(ultimoMensaje.clave, ultimoMensaje.v));
+  if (ultimaMision) { mostrarPanel(ultimaMision, leerParametros()); actualizarHud(); }
+  else ponerChips("", t("sin_mision_chip"));
+  marcadores.forEach((mk, k) => mk.setTooltipContent && mk.getTooltip() && mk.setTooltipContent(nombreParada(k)));
+});
 
 function texto(html) {
   document.getElementById("instruccion").innerHTML = html;
@@ -556,7 +573,7 @@ if ("serviceWorker" in navigator) {
 
 iniciar().catch((err) => {
   console.error(err);
-  alert("Error loading data. Open the page through a local server (python -m http.server).");
+  alert(t("error_carga"));
 });
 
 // Botones con data-click="id": hacen lo mismo que el boton con ese id

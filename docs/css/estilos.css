@@ -341,3 +341,11 @@ body.modo-casco3d #casco {
   #hc-paneles { left: 110px; width: 220px; }
   #hc-mini { right: 20px; width: 160px; height: 116px; }
 }
+
+/* ---------- Selector de idioma EN | ES ---------- */
+.idiomas { display: flex; gap: 2px; background: var(--caja); border: 1px solid var(--linea); border-radius: 8px; padding: 3px; }
+.idiomas button {
+  border: 0; background: transparent; color: var(--tenue); font-family: var(--mono); font-size: 12px; font-weight: 600;
+  min-width: 36px; min-height: 30px; border-radius: 6px;
+}
+.idiomas button.activo { background: var(--texto); color: #0B0F17; }

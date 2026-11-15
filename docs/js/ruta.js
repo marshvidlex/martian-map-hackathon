@@ -168,7 +168,7 @@ function planearMision(cuad, paradas, params) {
   const tramos = [];
   for (let k = 0; k < puntos.length - 1; k++) {
     const camino = buscarRuta(cuad, puntos[k], puntos[k + 1], params);
-    if (!camino) return { error: `No safe route for leg ${k + 1}.` };
+    if (!camino) return { error: typeof t === "function" ? t("error_ruta", { n: k + 1 }) : `No safe route for leg ${k + 1}.` };
     tramos.push(medirTramo(cuad, camino, params));
   }
 

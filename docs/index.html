@@ -21,20 +21,21 @@
       <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="13" fill="none" stroke="#F26B3A" stroke-width="2"/><path d="M6 19 C11 13, 17 21, 24 11" fill="none" stroke="#4FD1E8" stroke-width="2" stroke-linecap="round"/><circle cx="24" cy="11" r="2.4" fill="#4FD1E8"/></svg>
       <div>
         <div class="marca-titulo">MARTIAN MAP</div>
-        <div class="marca-sub"><span id="nombre-zona">Jezero Crater</span> · MARSWALK PLANNER</div>
+        <div class="marca-sub"><span id="nombre-zona">Jezero Crater</span> · <span data-i18n="sub">MARSWALK PLANNER</span></div>
       </div>
     </div>
     <nav class="modos" aria-label="Modes">
-      <button class="activo" aria-current="page">Plan</button>
-      <button id="btn-3d">3D table</button>
-      <button data-click="btn-aprobar">Visor</button>
+      <button class="activo" aria-current="page" data-i18n="modo_plan">Plan</button>
+      <button id="btn-3d" data-i18n="modo_3d">3D table</button>
+      <button data-click="btn-aprobar" data-i18n="modo_visor">Visor</button>
     </nav>
     <div class="espacio"></div>
     <div class="zona">
-      <label for="sel-zona">SITE</label>
+      <label for="sel-zona" data-i18n="sitio">SITE</label>
       <select id="sel-zona"></select>
     </div>
-    <div id="chip-estado" class="chip">NO MISSION</div>
+    <div class="idiomas" role="group" aria-label="Language / Idioma"><button data-idioma="en">EN</button><button data-idioma="es">ES</button></div>
+    <div id="chip-estado" class="chip" data-i18n="sin_mision_chip">NO MISSION</div>
   </header>
 
   <!-- ================= Cuerpo: capas | mapa | mision ================= -->
@@ -43,66 +44,66 @@
     <!-- Capas -->
     <aside id="rail" aria-label="Layers">
       <section>
-        <h2>BASE MAP</h2>
+        <h2 data-i18n="base">BASE MAP</h2>
         <div class="capa">
-          <label><input type="checkbox" id="chk-foto" checked> CTX orbital photo</label>
+          <label><input type="checkbox" id="chk-foto" checked> <span data-i18n="capa_foto">CTX orbital photo</span></label>
           <input type="range" id="op-foto" min="0" max="1" step="0.1" value="1" aria-label="Photo opacity">
         </div>
         <div class="capa">
-          <label><input type="checkbox" id="chk-elevacion"> Elevation</label>
+          <label><input type="checkbox" id="chk-elevacion"> <span data-i18n="capa_elev">Elevation</span></label>
           <input type="range" id="op-elevacion" min="0" max="1" step="0.1" value="0.6" aria-label="Elevation opacity">
         </div>
       </section>
       <section>
-        <h2>SAFETY LAYERS</h2>
+        <h2 data-i18n="seguridad">SAFETY LAYERS</h2>
         <div class="capa">
-          <label><input type="checkbox" id="chk-pendiente"> Slope <span class="dato">red = blocked</span></label>
+          <label><input type="checkbox" id="chk-pendiente"> <span data-i18n="capa_pend">Slope</span> <span class="dato" data-i18n="rojo_bloq">red = blocked</span></label>
           <input type="range" id="op-pendiente" min="0" max="1" step="0.1" value="0.6" aria-label="Slope opacity">
         </div>
         <div class="capa" id="bloque-rugosidad">
-          <label><input type="checkbox" id="chk-rugosidad"> HiRISE roughness</label>
+          <label><input type="checkbox" id="chk-rugosidad"> <span data-i18n="capa_rug">HiRISE roughness</span></label>
           <input type="range" id="op-rugosidad" min="0" max="1" step="0.1" value="0.8" aria-label="Roughness opacity">
         </div>
-        <label class="opcion"><input type="checkbox" id="chk-regreso"> Walk-back zone</label>
-        <label class="opcion"><input type="checkbox" id="chk-tormenta"> Solar storm scenario</label>
+        <label class="opcion"><input type="checkbox" id="chk-regreso"> <span data-i18n="capa_regreso">Walk-back zone</span></label>
+        <label class="opcion"><input type="checkbox" id="chk-tormenta"> <span data-i18n="capa_tormenta">Solar storm scenario</span></label>
       </section>
       <section>
-        <h2>SCIENCE LAYERS</h2>
+        <h2 data-i18n="ciencia">SCIENCE LAYERS</h2>
         <div id="capas-extra"></div>
       </section>
-      <p class="nota fuentes">Data: USGS / NASA · CTX, HiRISE, SIM 3464, M20 traverse</p>
+      <p class="nota fuentes" data-i18n="fuentes">Data: USGS / NASA · CTX, HiRISE, SIM 3464, M20 traverse</p>
     </aside>
 
     <!-- Mapa con controles encima -->
     <main id="zona-mapa">
       <div id="mapa"></div>
       <div class="flotante arriba-izq">
-        <span class="etiqueta">NEXT ACTION</span>
-        <p id="instruccion">Tap the map to place the <b>habitat</b>.</p>
+        <span class="etiqueta" data-i18n="sig_accion">NEXT ACTION</span>
+        <p id="instruccion" data-i18n="i_habitat">Tap the map to place the <b>habitat</b>.</p>
       </div>
       <div class="flotante-botones abajo-izq">
-        <button id="btn-quitar" class="btn-sec">Undo last stop</button>
-        <button id="btn-borrar" class="btn-sec">Clear mission</button>
+        <button id="btn-quitar" class="btn-sec" data-i18n="btn_deshacer">Undo last stop</button>
+        <button id="btn-borrar" class="btn-sec" data-i18n="btn_borrar">Clear mission</button>
       </div>
-      <div id="coordenadas" class="flotante abajo-der mono">Move over the map</div>
+      <div id="coordenadas" class="flotante abajo-der mono" data-i18n="mueve">Move over the map</div>
     </main>
 
     <!-- Mision -->
     <aside id="panel" aria-label="Mission">
       <section id="sin-mision" class="vacio">
-        <span class="etiqueta">MISSION STATUS</span>
-        <p class="vacio-titulo">No mission yet</p>
+        <span class="etiqueta" data-i18n="estado_mision">MISSION STATUS</span>
+        <p class="vacio-titulo" data-i18n="sin_mision">No mission yet</p>
         <ol>
-          <li>Tap the map to place the <b>habitat</b>.</li>
-          <li>Tap again to add <b>stops</b>.</li>
-          <li>Review the result and <b>approve</b>.</li>
+          <li data-i18n="paso1">Tap the map to place the <b>habitat</b>.</li>
+          <li data-i18n="paso2">Tap again to add <b>stops</b>.</li>
+          <li data-i18n="paso3">Review the result and <b>approve</b>.</li>
         </ol>
       </section>
 
       <div id="resultado" class="oculto">
         <section id="tarjeta-veredicto" class="tarjeta-go">
           <div class="fila-etiqueta">
-            <span class="etiqueta">MISSION STATUS</span>
+            <span class="etiqueta" data-i18n="estado_mision">MISSION STATUS</span>
             <span id="resumen-paradas" class="mono pequeno"></span>
           </div>
           <div class="fila-veredicto">
@@ -112,43 +113,43 @@
         </section>
 
         <section class="cifras">
-          <div class="cifra"><span class="etiqueta">DISTANCE</span><span id="r-distancia" class="valor"></span></div>
-          <div class="cifra"><span class="etiqueta">TOTAL TIME</span><span id="r-total" class="valor"></span></div>
-          <div class="cifra"><span class="etiqueta">OXYGEN</span><span id="r-oxigeno" class="valor"></span><span class="barra"><span id="b-oxigeno"></span></span></div>
-          <div class="cifra"><span class="etiqueta">RADIATION</span><span id="r-radiacion" class="valor"></span><span class="barra"><span id="b-dosis"></span></span></div>
-          <div class="cifra"><span class="etiqueta">MAX SLOPE</span><span id="r-pendiente" class="valor"></span></div>
-          <div class="cifra"><span class="etiqueta">TOTAL CLIMB</span><span id="r-subida" class="valor"></span></div>
+          <div class="cifra"><span class="etiqueta" data-i18n="distancia">DISTANCE</span><span id="r-distancia" class="valor"></span></div>
+          <div class="cifra"><span class="etiqueta" data-i18n="tiempo_total">TOTAL TIME</span><span id="r-total" class="valor"></span></div>
+          <div class="cifra"><span class="etiqueta" data-i18n="oxigeno">OXYGEN</span><span id="r-oxigeno" class="valor"></span><span class="barra"><span id="b-oxigeno"></span></span></div>
+          <div class="cifra"><span class="etiqueta" data-i18n="radiacion">RADIATION</span><span id="r-radiacion" class="valor"></span><span class="barra"><span id="b-dosis"></span></span></div>
+          <div class="cifra"><span class="etiqueta" data-i18n="pend_max">MAX SLOPE</span><span id="r-pendiente" class="valor"></span></div>
+          <div class="cifra"><span class="etiqueta" data-i18n="subida">TOTAL CLIMB</span><span id="r-subida" class="valor"></span></div>
         </section>
 
         <section>
-          <h2>TIMELINE</h2>
+          <h2 data-i18n="linea_tiempo">TIMELINE</h2>
           <ol id="tramos"></ol>
         </section>
 
         <section>
-          <h2>ELEVATION PROFILE</h2>
+          <h2 data-i18n="perfil">ELEVATION PROFILE</h2>
           <canvas id="perfil" width="380" height="110"></canvas>
         </section>
 
         <div class="acciones">
-          <button id="btn-aprobar" class="btn-principal">APPROVE MISSION &amp; SUIT UP</button>
-          <button data-click="btn-3d" class="btn-sec">Review in 3D table</button>
+          <button id="btn-aprobar" class="btn-principal" data-i18n="aprobar">APPROVE MISSION &amp; SUIT UP</button>
+          <button data-click="btn-3d" class="btn-sec" data-i18n="ver3d">Review in 3D table</button>
         </div>
       </div>
 
       <details>
-        <summary>Mission parameters (demo values)</summary>
-        <label>Max slope (degrees) <input type="number" id="p-pendiente" value="25"></label>
-        <label>Max roughness (m) <input type="number" id="p-rugosidad" value="1" step="0.1"></label>
-        <label>Speed on flat ground (km/h) <input type="number" id="p-velocidad" value="3" step="0.5"></label>
-        <label>Extra load (kg) <input type="number" id="p-carga" value="20" step="5"></label>
-        <label>Suit oxygen (hours) <input type="number" id="p-oxigeno" value="8"></label>
-        <label>Work time per stop (hours) <input type="number" id="p-trabajo" value="0.5" step="0.25"></label>
-        <label>Safety reserve (%) <input type="number" id="p-reserva" value="20"></label>
-        <label>Normal radiation (mSv per day) <input type="number" id="p-radiacion" value="0.67" step="0.01"></label>
-        <label>Solar storm multiplier <input type="number" id="p-mult-tormenta" value="50"></label>
-        <label>Dose limit per EVA (mSv) <input type="number" id="p-limite-dosis" value="1" step="0.1"></label>
-        <p class="nota">Demo values, not official NASA data.</p>
+        <summary data-i18n="params">Mission parameters (demo values)</summary>
+        <label><span data-i18n="p_pend">Max slope (degrees)</span> <input type="number" id="p-pendiente" value="25"></label>
+        <label><span data-i18n="p_rug">Max roughness (m)</span> <input type="number" id="p-rugosidad" value="1" step="0.1"></label>
+        <label><span data-i18n="p_vel">Speed on flat ground (km/h)</span> <input type="number" id="p-velocidad" value="3" step="0.5"></label>
+        <label><span data-i18n="p_carga">Extra load (kg)</span> <input type="number" id="p-carga" value="20" step="5"></label>
+        <label><span data-i18n="p_oxi">Suit oxygen (hours)</span> <input type="number" id="p-oxigeno" value="8"></label>
+        <label><span data-i18n="p_trabajo">Work time per stop (hours)</span> <input type="number" id="p-trabajo" value="0.5" step="0.25"></label>
+        <label><span data-i18n="p_reserva">Safety reserve (%)</span> <input type="number" id="p-reserva" value="20"></label>
+        <label><span data-i18n="p_rad">Normal radiation (mSv per day)</span> <input type="number" id="p-radiacion" value="0.67" step="0.01"></label>
+        <label><span data-i18n="p_tormenta">Solar storm multiplier</span> <input type="number" id="p-mult-tormenta" value="50"></label>
+        <label><span data-i18n="p_dosis">Dose limit per EVA (mSv)</span> <input type="number" id="p-limite-dosis" value="1" step="0.1"></label>
+        <p class="nota" data-i18n="nota_demo">Demo values, not official NASA data.</p>
       </details>
     </aside>
   </div>
@@ -169,23 +170,24 @@
     <header class="barra3d-arriba">
       <span class="marca-titulo">MARTIAN MAP</span>
       <nav class="modos" aria-label="Modes">
-        <button data-click="btn-cerrar3d">Plan</button>
-        <button class="activo" aria-current="page">3D table</button>
-        <button data-click="btn-aprobar3d">Visor</button>
+        <button data-click="btn-cerrar3d" data-i18n="modo_plan">Plan</button>
+        <button class="activo" aria-current="page" data-i18n="modo_3d">3D table</button>
+        <button data-click="btn-aprobar3d" data-i18n="modo_visor">Visor</button>
       </nav>
       <span class="espacio"></span>
-      <span class="mono tenue">RELIEF <span id="txt-exagera">2.5x</span></span>
+      <div class="idiomas" role="group" aria-label="Language / Idioma"><button data-idioma="en">EN</button><button data-idioma="es">ES</button></div>
+      <span class="mono tenue"><span data-i18n="relieve">RELIEF</span> <span id="txt-exagera">2.5x</span></span>
     </header>
 
     <section id="panel3d" class="tarjeta3d">
-      <h2>DRAPE LAYER</h2>
+      <h2 data-i18n="capa_drape">DRAPE LAYER</h2>
       <div id="capas3d" class="rejilla2"></div>
-      <h2>GO TO</h2>
+      <h2 data-i18n="ir_a">GO TO</h2>
       <div id="lugares3d" class="lista-lugares"></div>
-      <label class="rango3d">RELIEF
+      <label class="rango3d"><span data-i18n="relieve">RELIEF</span>
         <input type="range" id="rng-exagera" min="1" max="6" step="0.5" value="2.5">
       </label>
-      <p class="nota">Tap a marker to fly to it. Double-click the ground to zoom in.</p>
+      <p class="nota" data-i18n="tip3d">Tap a marker to fly to it. Double-click the ground to zoom in.</p>
     </section>
 
     <section id="ficha3d" class="tarjeta3d oculto">
@@ -195,32 +197,32 @@
       </div>
       <div id="ficha-unidad" class="ficha-unidad"></div>
       <div class="ficha-datos mono">
-        <span class="tenue">Lat / Lon</span><span id="ficha-coord"></span>
-        <span class="tenue">Elevation</span><span id="ficha-elev"></span>
-        <span class="tenue">Arrival</span><span id="ficha-llegada"></span>
-        <span class="tenue">Slope here</span><span id="ficha-pend"></span>
+        <span class="tenue" data-i18n="f_latlon">Lat / Lon</span><span id="ficha-coord"></span>
+        <span class="tenue" data-i18n="f_elev">Elevation</span><span id="ficha-elev"></span>
+        <span class="tenue" data-i18n="f_llegada">Arrival</span><span id="ficha-llegada"></span>
+        <span class="tenue" data-i18n="f_pend">Slope here</span><span id="ficha-pend"></span>
       </div>
       <p id="ficha-texto"></p>
       <div class="fila-botones">
-        <button id="ficha-ant" class="btn-sec">Previous</button>
-        <button id="ficha-sig" class="btn-sec">Next stop</button>
+        <button id="ficha-ant" class="btn-sec" data-i18n="f_ant">Previous</button>
+        <button id="ficha-sig" class="btn-sec" data-i18n="f_sig">Next stop</button>
       </div>
     </section>
 
     <section id="leyenda3d" class="tarjeta3d">
-      <h2>LEGEND</h2>
-      <div><span class="muestra ida"></span>Outbound route</div>
-      <div><span class="muestra regreso"></span>Return route</div>
-      <div id="leyenda-rover"><span class="muestra rover"></span>Perseverance real traverse</div>
-      <div class="tenue">Geology: USGS SIM 3464 (Sun &amp; Stack, 2020)</div>
+      <h2 data-i18n="leyenda">LEGEND</h2>
+      <div><span class="muestra ida"></span><span data-i18n="ley_ida">Outbound route</span></div>
+      <div><span class="muestra regreso"></span><span data-i18n="ley_reg">Return route</span></div>
+      <div id="leyenda-rover"><span class="muestra rover"></span><span data-i18n="ley_rover">Perseverance real traverse</span></div>
+      <div class="tenue" data-i18n="ley_geo">Geology: USGS SIM 3464 (Sun &amp; Stack, 2020)</div>
     </section>
 
     <footer class="barra3d-abajo">
-      <button id="btn-cerrar3d" class="btn-sec">&larr; Back to plan</button>
-      <button id="btn-recorrer" class="btn-sec">Fly the route</button>
+      <button id="btn-cerrar3d" class="btn-sec" data-i18n="volver_plan">&larr; Back to plan</button>
+      <button id="btn-recorrer" class="btn-sec" data-i18n="recorrer">Fly the route</button>
       <span class="espacio"></span>
-      <span id="estado3d" class="chip">NO MISSION</span>
-      <button id="btn-aprobar3d" class="btn-principal">APPROVE &amp; SUIT UP</button>
+      <span id="estado3d" class="chip" data-i18n="sin_mision_chip">NO MISSION</span>
+      <button id="btn-aprobar3d" class="btn-principal" data-i18n="aprobar_corto">APPROVE &amp; SUIT UP</button>
     </footer>
   </div>
 
@@ -237,7 +239,7 @@
     <section id="hc-o2-tarjeta" class="hc-caja">
       <div id="hc-o2-anillo"><div class="hueco"></div></div>
       <div>
-        <div class="hc-etiqueta">SUIT O₂</div>
+        <div class="hc-etiqueta" data-i18n="o2_traje">SUIT O₂</div>
         <div id="hc-o2-pct" class="hc-grande">100%</div>
         <div id="hc-o2-resto" class="hc-tenue"></div>
       </div>
@@ -245,44 +247,45 @@
     </section>
 
     <section id="hc-tele" class="hc-caja">
-      <div><span>MET</span><span id="hc-t-met">T+0:00</span></div>
-      <div><span>WALKED</span><span id="hc-t-dist">0.00 km</span></div>
-      <div><span>DOSE</span><span id="hc-t-dosis">0.000 mSv</span></div>
-      <div><span>BACK IN</span><span id="hc-t-regreso">--</span></div>
+      <div><span data-i18n="met">MET</span><span id="hc-t-met">T+0:00</span></div>
+      <div><span data-i18n="recorrido">WALKED</span><span id="hc-t-dist">0.00 km</span></div>
+      <div><span data-i18n="dosis">DOSE</span><span id="hc-t-dosis">0.000 mSv</span></div>
+      <div><span data-i18n="regreso_en">BACK IN</span><span id="hc-t-regreso">--</span></div>
     </section>
 
     <div id="hc-alerta" role="status"></div>
 
     <div id="hc-iconos">
-      <button data-panel="oxigeno">O₂</button>
-      <button data-panel="distancia">DIST</button>
-      <button data-panel="tiempo">TIME</button>
-      <button data-panel="terreno">TERRAIN</button>
-      <button data-panel="dosis">DOSE</button>
-      <button data-panel="parada">STOP</button>
-      <button data-panel="mapa" class="activo">MAP</button>
+      <button data-panel="oxigeno" data-i18n="h_o2">O₂</button>
+      <button data-panel="distancia" data-i18n="h_dist">DIST</button>
+      <button data-panel="tiempo" data-i18n="h_tiempo">TIME</button>
+      <button data-panel="terreno" data-i18n="h_terreno">TERRAIN</button>
+      <button data-panel="dosis" data-i18n="h_dosis">DOSE</button>
+      <button data-panel="parada" data-i18n="h_parada">STOP</button>
+      <button data-panel="mapa" class="activo" data-i18n="h_mapa">MAP</button>
     </div>
     <div id="hc-paneles"></div>
     <canvas id="hc-mini" width="220" height="160"></canvas>
 
     <div id="hc-controles">
-      <button id="hc-pausa">Pause</button>
+      <button id="hc-pausa" data-i18n="pausa">Pause</button>
       <span id="hc-velocidad" role="group" aria-label="Simulation speed">
         <button data-x="1">×1</button><button data-x="10">×10</button><button data-x="60">×60</button><button data-x="300">×300</button>
       </span>
-      <button id="hc-frente">Look ahead</button>
-      <button id="hc-giro">Gyroscope</button>
-      <button id="hc-salir" class="hc-abortar">Abort · back to the ship</button>
+      <button id="hc-frente" data-i18n="frente">Look ahead</button>
+      <button id="hc-giro" data-i18n="giro">Gyroscope</button>
+      <button id="hc-salir" class="hc-abortar" data-i18n="abortar">Abort · back to the ship</button>
     </div>
 
     <div id="hc-resumen" class="oculto">
-      <h2>Walk complete</h2>
+      <h2 data-i18n="fin">Walk complete</h2>
       <div id="hc-resumen-datos"></div>
-      <button id="hc-volver">Back to the ship</button>
+      <button id="hc-volver" data-i18n="volver_nave">Back to the ship</button>
     </div>
   </div>
 
   <script src="lib/leaflet/leaflet.js"></script>
+  <script src="js/idioma.js"></script>
   <script src="js/ruta.js"></script>
   <script src="js/app.js"></script>
 

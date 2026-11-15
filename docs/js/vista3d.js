@@ -445,7 +445,7 @@ function mostrarFicha(i) {
     ff.hidden = !tiene;
     if (tiene) {
       const f = l.poi.fotos[0];
-      ff.innerHTML = `<img src="${window.DATOS + f.archivo}" alt="${l.poi.nombre}"><figcaption>${t("ci_visto")} · ${f.camara} · ${t("ci_sol_corto", { n: f.sol })}</figcaption>`;
+      ff.innerHTML = `<img src="${window.DATOS + f.archivo}" alt="${l.poi.nombre}"><figcaption>${t("ci_visto", { r: l.poi.rover || "Perseverance" })} · ${f.camara} · ${t("ci_sol_corto", { n: f.sol })}</figcaption>`;
       ff.onclick = () => window.abrirFotoPoi && abrirFotoPoi(l.poi, 0);
     }
   }

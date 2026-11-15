@@ -2,7 +2,7 @@
 // Estrategia "primero la red": si hay internet trae lo nuevo y lo guarda;
 // si no hay, usa la copia guardada. Asi no te quedas con versiones viejas mientras programas.
 
-const CACHE = "martian-map-v34"; // si cambias la lista de archivos, sube el numero
+const CACHE = "martian-map-v35"; // si cambias la lista de archivos, sube el numero
 // Ojo: en index.html los css/js llevan ?v=NN; subelo junto con este numero para que el navegador no use copias viejas.
 
 const ARCHIVOS = [
@@ -45,11 +45,12 @@ for (let z = 0; z <= 3; z++) {
     for (let x = 0; x < 2 ** (z + 1); x++) MOSAICOS_MARTE.push(`data/marte/${z}/${y}/${x}.jpg`);
   }
 }
+const ZONAS = ["jezero", "gale"];
 // Datos de las zonas que ya vienen en el repo (si alguno no existe, no pasa nada)
 const DATOS_ZONA = ["data/zonas.json"].concat(
   ["info.json", "cuadricula.json", "foto.png", "elevacion.png", "pendiente.png", "rugosidad.png",
     "geologia.png", "crateres.json", "ciencia.json", "aterrizaje.json", "aterrizaje.png", "M20_traverse.json", "poi.json",
-    "hirise/indice.json"].map((a) => `data/zonas/jezero/${a}`));
+    "hirise/indice.json"].flatMap((a) => ZONAS.map((z) => `data/zonas/${z}/${a}`)));
 
 // Al instalar: guardamos la app, el mapa de Marte y los datos de Jezero.
 // Las fotos HiRISE de cerca se guardan la primera vez que se ven.
@@ -59,8 +60,8 @@ self.addEventListener("install", (e) => {
     // uno por uno: si falta alguno no se cae toda la instalacion
     ...MOSAICOS_MARTE.concat(DATOS_ZONA).map((u) => c.add(u).catch(() => null)),
     // fotos de Perseverance de los lugares de ciencia (scripts/descargar_fotos_rover.py)
-    fetch("data/zonas/jezero/poi.json").then((r) => r.json()).then((pois) => Promise.all(pois.flatMap((p) =>
-      (p.fotos || []).map((f) => c.add(`data/zonas/jezero/${f.archivo}`).catch(() => null))))).catch(() => null),
+    ...ZONAS.map((z) => fetch(`data/zonas/${z}/poi.json`).then((r) => r.json()).then((pois) => Promise.all(pois.flatMap((p) =>
+      (p.fotos || []).map((f) => c.add(`data/zonas/${z}/${f.archivo}`).catch(() => null))))).catch(() => null)),
     // nivel 4 (mas detalle) alrededor de cada sitio de aterrizaje: 3 x 3 mosaicos por sitio
     fetch("data/sitios.json").then((r) => r.json()).then((sitios) => Promise.all(sitios.flatMap((s) => {
       const cx = Math.floor(((s.lon + 180) / 360) * 32), cy = Math.floor(((90 - s.lat) / 180) * 16), lista = [];

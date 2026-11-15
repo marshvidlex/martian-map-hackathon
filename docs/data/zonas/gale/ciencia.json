@@ -1,0 +1,41 @@
+[
+ {
+  "id": "lago",
+  "color": "#3DDC84",
+  "en": {
+   "titulo": "Was Gale a habitable lake?",
+   "desc": "Drill the Yellowknife Bay mudstone, where Curiosity found the first proof that Mars once had water good for microbes."
+  },
+  "es": {
+   "titulo": "¿Gale fue un lago habitable?",
+   "desc": "Perforar la lodolita de Yellowknife Bay, donde Curiosity encontró la primera prueba de que Marte tuvo agua buena para microbios."
+  },
+  "fuente": "https://doi.org/10.1002/2014JE004622"
+ },
+ {
+  "id": "rio",
+  "color": "#4FD1E8",
+  "en": {
+   "titulo": "Follow the ancient streams",
+   "desc": "Visit the rounded pebbles and cross-bedded sandstone left by rivers that flowed into the crater."
+  },
+  "es": {
+   "titulo": "Seguir los ríos antiguos",
+   "desc": "Visitar las piedras redondeadas y la arenisca en capas cruzadas que dejaron ríos que entraban al cráter."
+  },
+  "fuente": "https://doi.org/10.1002/2014JE004622"
+ },
+ {
+  "id": "suelo",
+  "color": "#FFB547",
+  "en": {
+   "titulo": "Test today's soil and dust",
+   "desc": "Scoop the wind-blown sand and check the landing area: useful for the habitat, water extraction and dust in the suits."
+  },
+  "es": {
+   "titulo": "Probar el suelo y el polvo de hoy",
+   "desc": "Recoger arena que trajo el viento y revisar la zona de aterrizaje: sirve para el hábitat, sacar agua y el polvo en los trajes."
+  },
+  "fuente": "https://en.wikipedia.org/wiki/Yellowknife_Bay,_Mars"
+ }
+]

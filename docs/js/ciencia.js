@@ -50,6 +50,9 @@ function traducirPois() {
   for (const p of pois) if ((p.fotos || []).length) p.foto = DATOS + p.fotos[0].archivo;
 }
 
+// Rover que estudio cada lugar (Jezero: Perseverance, Gale: Curiosity)
+const roverDe = (p) => p.rover || "Perseverance";
+const roverZona = () => (pois[0] && pois[0].rover) || "Perseverance";
 const objetivoDe = (p) => CIENCIA.objetivos.find((o) => o.id === p.objetivo);
 const colorPoi = (p) => (objetivoDe(p) || {}).color || "#FFD23F";
 
@@ -61,7 +64,7 @@ function htmlFicha(p) {
     <p>${p.que_estudiar}</p>
     <dl><dt>${t("ci_inst")}</dt><dd>${p.instrumento}</dd>
         <dt>${t("ci_muestra")}</dt><dd>${p.muestra}</dd>
-        ${p.sol ? `<dt>${t("ci_rover")}</dt><dd>${t("ci_sol", { n: p.sol })}</dd>` : ""}</dl>
+        ${p.sol ? `<dt>${t("ci_rover")}</dt><dd>${t("ci_sol", { n: p.sol, r: roverDe(p) })}</dd>` : ""}</dl>
     ${htmlGaleria(p, 0)}
     ${p.fuente ? `<a href="${p.fuente}" target="_blank" rel="noopener">${t("ci_fuente")}</a>` : ""}
     <button class="btn-sec btn-ancho" data-poi-agregar="${p.id}">${t("ci_agregar")}</button>
@@ -83,7 +86,7 @@ function htmlGaleria(p, k) {
         <button class="poi-gal-sig" data-gal="1" aria-label="next">›</button>
         <span class="poi-gal-num">${k + 1}/${fotos.length}</span>` : ""}
     </div>
-    <figcaption>${t("ci_visto")} · ${pieFoto(f)}</figcaption>
+    <figcaption>${t("ci_visto", { r: roverDe(p) })} · ${pieFoto(f)}</figcaption>
   </figure>`;
 }
 
@@ -200,7 +203,7 @@ function pintarSeccion() {
     if (ater) ater.after(s); else rail.prepend(s);
   }
   const cuerpo = document.getElementById("ci-cuerpo");
-  cuerpo.innerHTML = `<p class="nota">${t("ci_intro")}</p>
+  cuerpo.innerHTML = `<p class="nota">${t("ci_intro", { r: roverZona() })}</p>
     ${CIENCIA.objetivos.map((o) => {
       const txt = o[IDIOMA] || o.en;
       const lugares = pois.filter((p) => p.objetivo === o.id);
@@ -208,7 +211,7 @@ function pintarSeccion() {
         <label><input type="checkbox" data-objetivo="${o.id}" ${CIENCIA.elegidos.has(o.id) ? "checked" : ""}>
           <span><b>${txt.titulo}</b><small>${txt.desc}</small></span></label>
         <ul>${lugares.map((p) => `<li><button data-poi-ver="${p.id}" class="${estaEnRuta(p) ? "en-ruta" : ""}">
-          <i>★</i><span>${p.nombre}</span>${(p.fotos || []).length ? `<small class="ci-cam" title="${t("ci_visto")}">📷</small>` : ""}${estaEnRuta(p) ? "<em>✓</em>" : ""}</button></li>`).join("")}</ul>
+          <i>★</i><span>${p.nombre}</span>${(p.fotos || []).length ? `<small class="ci-cam" title="${t("ci_visto", { r: roverDe(p) })}">📷</small>` : ""}${estaEnRuta(p) ? "<em>✓</em>" : ""}</button></li>`).join("")}</ul>
       </div>`;
     }).join("")}
     <button id="btn-ci-planear" class="btn-principal btn-ancho">${t("ci_planear")}</button>`;

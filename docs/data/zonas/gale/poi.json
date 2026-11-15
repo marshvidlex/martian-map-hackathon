@@ -1,1 +1,384 @@
-[]
+[
+ {
+  "id": "bradbury",
+  "nombre": "Bradbury Landing · Goulburn",
+  "lat": -4.589467,
+  "lon": 137.441633,
+  "objetivo": "suelo",
+  "tipo": "landing",
+  "sol": 0,
+  "rover": "Curiosity",
+  "mision": "msl",
+  "soles_fotos": [
+   1,
+   2,
+   3,
+   13
+  ],
+  "que_estudiar": "Where Curiosity landed on 6 Aug 2012. The landing rockets blew away the soil at Goulburn and exposed the bedrock underneath: a free look below the dust.",
+  "instrumento": "Context photos, hand lens",
+  "muestra": "No",
+  "en": {
+   "que": "Where Curiosity landed on 6 Aug 2012. The landing rockets blew away the soil at Goulburn and exposed the bedrock underneath: a free look below the dust.",
+   "inst": "Context photos, hand lens",
+   "muestra": "No"
+  },
+  "es": {
+   "que": "Donde aterrizó Curiosity el 6 de agosto de 2012. Los cohetes de aterrizaje barrieron el suelo en Goulburn y dejaron ver la roca de abajo: una mirada gratis debajo del polvo.",
+   "inst": "Fotos de contexto, lupa",
+   "muestra": "No"
+  },
+  "fuente": "https://doi.org/10.1002/2014JE004622",
+  "ubicacion": "Curiosity position on sol 0 (NASA/JPL MSL waypoints)",
+  "fotos": [
+   {
+    "archivo": "fotos/bradbury_1.jpg",
+    "camara": "Mastcam",
+    "sol": 1,
+    "credito": "NASA/JPL-Caltech/MSSS",
+    "url": "https://mars.jpl.nasa.gov/msl-raw-images/msss/00001/mcam/0001MR0000000010100001C00_DXXX.jpg",
+    "imagen": "0001MR0000000010100001C00_DXXX"
+   },
+   {
+    "archivo": "fotos/bradbury_2.jpg",
+    "camara": "Navcam",
+    "sol": 1,
+    "credito": "NASA/JPL-Caltech",
+    "url": "https://mars.jpl.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/00001/opgs/edr/ncam/NLA_397586934EDR_F0010008AUT_04096M_.JPG",
+    "imagen": "NLA_397586934EDR_F0010008AUT_04096M_"
+   }
+  ]
+ },
+ {
+  "id": "link",
+  "nombre": "Link",
+  "lat": -4.589749,
+  "lon": 137.442476,
+  "objetivo": "rio",
+  "tipo": "ciencia",
+  "sol": 27,
+  "rover": "Curiosity",
+  "mision": "msl",
+  "soles_fotos": [
+   27,
+   28,
+   26
+  ],
+  "que_estudiar": "Conglomerate with rounded pebbles stuck together. Pebbles only get round by rolling in water: proof of an old stream, about ankle to hip deep.",
+  "instrumento": "Close-up imaging, laser chemistry (like ChemCam)",
+  "muestra": "No",
+  "en": {
+   "que": "Conglomerate with rounded pebbles stuck together. Pebbles only get round by rolling in water: proof of an old stream, about ankle to hip deep.",
+   "inst": "Close-up imaging, laser chemistry (like ChemCam)",
+   "muestra": "No"
+  },
+  "es": {
+   "que": "Conglomerado con piedras redondeadas pegadas. Las piedras solo se redondean rodando en agua: prueba de un arroyo antiguo, de la profundidad del tobillo a la cadera.",
+   "inst": "Fotos de cerca, química por láser (como ChemCam)",
+   "muestra": "No"
+  },
+  "fuente": "https://doi.org/10.1002/2014JE004622",
+  "ubicacion": "Curiosity position on sol 27 (NASA/JPL MSL waypoints)",
+  "fotos": [
+   {
+    "archivo": "fotos/link_1.jpg",
+    "camara": "Mastcam",
+    "sol": 27,
+    "credito": "NASA/JPL-Caltech/MSSS",
+    "url": "https://mars.jpl.nasa.gov/msl-raw-images/msss/00027/mcam/0027ML0001300000100839E01_DXXX.jpg",
+    "imagen": "0027ML0001300000100839E01_DXXX"
+   },
+   {
+    "archivo": "fotos/link_2.jpg",
+    "camara": "Mastcam",
+    "sol": 27,
+    "credito": "NASA/JPL-Caltech/MSSS",
+    "url": "https://mars.jpl.nasa.gov/msl-raw-images/msss/00027/mcam/0027ML0001290000100838E01_DXXX.jpg",
+    "imagen": "0027ML0001290000100838E01_DXXX"
+   },
+   {
+    "archivo": "fotos/link_3.jpg",
+    "camara": "Navcam",
+    "sol": 27,
+    "credito": "NASA/JPL-Caltech",
+    "url": "https://mars.jpl.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/00027/opgs/edr/ncam/NLA_399886119EDR_D0030530NCAM00507M_.JPG",
+    "imagen": "NLA_399886119EDR_D0030530NCAM00507M_"
+   }
+  ]
+ },
+ {
+  "id": "hottah",
+  "nombre": "Hottah",
+  "lat": -4.590318,
+  "lon": 137.443663,
+  "objetivo": "rio",
+  "tipo": "ciencia",
+  "sol": 39,
+  "rover": "Curiosity",
+  "mision": "msl",
+  "soles_fotos": [
+   39,
+   40,
+   41
+  ],
+  "que_estudiar": "A tilted slab of ancient streambed gravel. Together with Link it was the first evidence of flowing water seen by Curiosity.",
+  "instrumento": "Close-up imaging, X-ray chemistry (like APXS)",
+  "muestra": "No",
+  "en": {
+   "que": "A tilted slab of ancient streambed gravel. Together with Link it was the first evidence of flowing water seen by Curiosity.",
+   "inst": "Close-up imaging, X-ray chemistry (like APXS)",
+   "muestra": "No"
+  },
+  "es": {
+   "que": "Una losa inclinada de grava de un antiguo cauce. Junto con Link fue la primera prueba de agua corriendo que vio Curiosity.",
+   "inst": "Fotos de cerca, química por rayos X (como APXS)",
+   "muestra": "No"
+  },
+  "fuente": "https://doi.org/10.1002/2014JE004622",
+  "ubicacion": "Curiosity position on sol 39 (NASA/JPL MSL waypoints)",
+  "fotos": [
+   {
+    "archivo": "fotos/hottah_1.jpg",
+    "camara": "Mastcam",
+    "sol": 39,
+    "credito": "NASA/JPL-Caltech/MSSS",
+    "url": "https://mars.jpl.nasa.gov/msl-raw-images/msss/00039/mcam/0039MR0001790010101234E01_DXXX.jpg",
+    "imagen": "0039MR0001790010101234E01_DXXX"
+   },
+   {
+    "archivo": "fotos/hottah_2.jpg",
+    "camara": "Mastcam",
+    "sol": 39,
+    "credito": "NASA/JPL-Caltech/MSSS",
+    "url": "https://mars.jpl.nasa.gov/msl-raw-images/msss/00039/mcam/0039MR0001740050101233E01_DXXX.jpg",
+    "imagen": "0039MR0001740050101233E01_DXXX"
+   },
+   {
+    "archivo": "fotos/hottah_3.jpg",
+    "camara": "Navcam",
+    "sol": 39,
+    "credito": "NASA/JPL-Caltech",
+    "url": "https://mars.jpl.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/00039/opgs/edr/ncam/NLA_400967424EDR_F0040468NCAM00420M_.JPG",
+    "imagen": "NLA_400967424EDR_F0040468NCAM00420M_"
+   }
+  ]
+ },
+ {
+  "id": "rocknest",
+  "nombre": "Rocknest",
+  "lat": -4.589996,
+  "lon": 137.448342,
+  "objetivo": "suelo",
+  "tipo": "ciencia",
+  "sol": 60,
+  "rover": "Curiosity",
+  "mision": "msl",
+  "soles_fotos": [
+   58,
+   61,
+   69,
+   74,
+   84
+  ],
+  "que_estudiar": "A drift of wind-blown sand where Curiosity used its scoop for the first time. First X-ray diffraction of Martian soil (17 Oct 2012). Heating the soil released water.",
+  "instrumento": "Scoop, X-ray diffraction (like CheMin), oven analysis (like SAM)",
+  "muestra": "Soil scoop",
+  "en": {
+   "que": "A drift of wind-blown sand where Curiosity used its scoop for the first time. First X-ray diffraction of Martian soil (17 Oct 2012). Heating the soil released water.",
+   "inst": "Scoop, X-ray diffraction (like CheMin), oven analysis (like SAM)",
+   "muestra": "Soil scoop"
+  },
+  "es": {
+   "que": "Un montón de arena traída por el viento donde Curiosity usó su pala por primera vez. Primera difracción de rayos X de suelo marciano (17 de octubre de 2012). Al calentar el suelo salió agua.",
+   "inst": "Pala, difracción de rayos X (como CheMin), horno de análisis (como SAM)",
+   "muestra": "Pala de suelo"
+  },
+  "fuente": "https://en.wikipedia.org/wiki/Yellowknife_Bay,_Mars",
+  "ubicacion": "Curiosity position on sol 60 (NASA/JPL MSL waypoints)",
+  "fotos": [
+   {
+    "archivo": "fotos/rocknest_1.jpg",
+    "camara": "MAHLI",
+    "sol": 58,
+    "credito": "NASA/JPL-Caltech/MSSS",
+    "url": "https://mars.jpl.nasa.gov/msl-raw-images/msss/00058/mhli/0058MH0000310010100471C00_DXXX.jpg",
+    "imagen": "0058MH0000310010100471C00_DXXX"
+   },
+   {
+    "archivo": "fotos/rocknest_2.jpg",
+    "camara": "Navcam",
+    "sol": 58,
+    "credito": "NASA/JPL-Caltech",
+    "url": "https://mars.jpl.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/00058/opgs/edr/ncam/NLA_402654215EDR_F0050000NCAM00318M_.JPG",
+    "imagen": "NLA_402654215EDR_F0050000NCAM00318M_"
+   }
+  ]
+ },
+ {
+  "id": "shaler",
+  "nombre": "Shaler",
+  "lat": -4.590443,
+  "lon": 137.44883,
+  "objetivo": "rio",
+  "tipo": "ciencia",
+  "sol": 120,
+  "rover": "Curiosity",
+  "mision": "msl",
+  "soles_fotos": [
+   120,
+   121,
+   316,
+   317
+  ],
+  "que_estudiar": "Sandstone with cross-bedding: tilted layers that form when water flows over sand. Shows the direction the ancient river ran.",
+  "instrumento": "Panoramic and close-up imaging",
+  "muestra": "No",
+  "en": {
+   "que": "Sandstone with cross-bedding: tilted layers that form when water flows over sand. Shows the direction the ancient river ran.",
+   "inst": "Panoramic and close-up imaging",
+   "muestra": "No"
+  },
+  "es": {
+   "que": "Arenisca con capas cruzadas: capas inclinadas que se forman cuando el agua corre sobre la arena. Muestra hacia dónde corría el río antiguo.",
+   "inst": "Fotos panorámicas y de cerca",
+   "muestra": "No"
+  },
+  "fuente": "https://en.wikipedia.org/wiki/Yellowknife_Bay,_Mars",
+  "ubicacion": "Curiosity position on sol 120 (NASA/JPL MSL waypoints)",
+  "fotos": [
+   {
+    "archivo": "fotos/shaler_1.jpg",
+    "camara": "Mastcam",
+    "sol": 120,
+    "credito": "NASA/JPL-Caltech/MSSS",
+    "url": "https://mars.jpl.nasa.gov/msl-raw-images/msss/00120/mcam/0120ML0007530320103834E01_DXXX.jpg",
+    "imagen": "0120ML0007530320103834E01_DXXX"
+   },
+   {
+    "archivo": "fotos/shaler_2.jpg",
+    "camara": "Mastcam",
+    "sol": 120,
+    "credito": "NASA/JPL-Caltech/MSSS",
+    "url": "https://mars.jpl.nasa.gov/msl-raw-images/msss/00120/mcam/0120MR0007520350200712E01_DXXX.jpg",
+    "imagen": "0120MR0007520350200712E01_DXXX"
+   },
+   {
+    "archivo": "fotos/shaler_3.jpg",
+    "camara": "Navcam",
+    "sol": 120,
+    "credito": "NASA/JPL-Caltech",
+    "url": "https://mars.jpl.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/00120/opgs/edr/ncam/NLA_408156574EDR_F0050742NCAM00215M_.JPG",
+    "imagen": "NLA_408156574EDR_F0050742NCAM00215M_"
+   }
+  ]
+ },
+ {
+  "id": "johnklein",
+  "nombre": "John Klein & Cumberland · Yellowknife Bay",
+  "lat": -4.589485,
+  "lon": 137.44913,
+  "objetivo": "lago",
+  "tipo": "ciencia",
+  "sol": 182,
+  "rover": "Curiosity",
+  "mision": "msl",
+  "soles_fotos": [
+   182,
+   279,
+   180,
+   275,
+   170
+  ],
+  "que_estudiar": "The first two rocks ever drilled on Mars, 3 m apart. Sheepbed mudstone from an old lake with clay minerals: NASA announced in March 2013 that conditions here were once suitable for microbial life. Cumberland also gave the first rock age measured on another planet (about 4 billion years).",
+  "instrumento": "Drill, X-ray diffraction (like CheMin), oven analysis (like SAM)",
+  "muestra": "Drilled powder",
+  "en": {
+   "que": "The first two rocks ever drilled on Mars, 3 m apart. Sheepbed mudstone from an old lake with clay minerals: NASA announced in March 2013 that conditions here were once suitable for microbial life. Cumberland also gave the first rock age measured on another planet (about 4 billion years).",
+   "inst": "Drill, X-ray diffraction (like CheMin), oven analysis (like SAM)",
+   "muestra": "Drilled powder"
+  },
+  "es": {
+   "que": "Las dos primeras rocas perforadas en Marte, a 3 m una de otra. Lodolita Sheepbed de un lago antiguo, con arcillas: NASA anunció en marzo de 2013 que aquí hubo condiciones aptas para vida microbiana. Cumberland además dio la primera edad de una roca medida en otro planeta (unos 4 mil millones de años).",
+   "inst": "Taladro, difracción de rayos X (como CheMin), horno de análisis (como SAM)",
+   "muestra": "Polvo de perforación"
+  },
+  "fuente": "https://en.wikipedia.org/wiki/Yellowknife_Bay,_Mars",
+  "ubicacion": "Curiosity position on sol 182 (NASA/JPL MSL waypoints)",
+  "fotos": [
+   {
+    "archivo": "fotos/johnklein_1.jpg",
+    "camara": "Mastcam",
+    "sol": 182,
+    "credito": "NASA/JPL-Caltech/MSSS",
+    "url": "https://mars.jpl.nasa.gov/msl-raw-images/msss/00182/mcam/0182ML0007450000105280E01_DXXX.jpg",
+    "imagen": "0182ML0007450000105280E01_DXXX"
+   },
+   {
+    "archivo": "fotos/johnklein_2.jpg",
+    "camara": "Mastcam",
+    "sol": 182,
+    "credito": "NASA/JPL-Caltech/MSSS",
+    "url": "https://mars.jpl.nasa.gov/msl-raw-images/msss/00182/mcam/0182MR0007440000202039E01_DXXX.jpg",
+    "imagen": "0182MR0007440000202039E01_DXXX"
+   },
+   {
+    "archivo": "fotos/johnklein_3.jpg",
+    "camara": "MAHLI",
+    "sol": 182,
+    "credito": "NASA/JPL-Caltech/MSSS",
+    "url": "https://mars.jpl.nasa.gov/msl-raw-images/msss/00182/mhli/0182MH0002120000102687S00_DXXX.jpg",
+    "imagen": "0182MH0002120000102687S00_DXXX"
+   }
+  ]
+ },
+ {
+  "id": "darwin",
+  "nombre": "Darwin waypoint",
+  "lat": -4.607115,
+  "lon": 137.426291,
+  "objetivo": "rio",
+  "tipo": "ciencia",
+  "sol": 395,
+  "rover": "Curiosity",
+  "mision": "msl",
+  "soles_fotos": [
+   393,
+   395,
+   396,
+   400
+  ],
+  "que_estudiar": "First stop on the drive to Mount Sharp: pebbly sandstone from streams, studied to compare with Yellowknife Bay.",
+  "instrumento": "Close-up imaging, X-ray chemistry (like APXS)",
+  "muestra": "No",
+  "en": {
+   "que": "First stop on the drive to Mount Sharp: pebbly sandstone from streams, studied to compare with Yellowknife Bay.",
+   "inst": "Close-up imaging, X-ray chemistry (like APXS)",
+   "muestra": "No"
+  },
+  "es": {
+   "que": "Primera parada del camino al Monte Sharp: arenisca con piedras de arroyo, estudiada para compararla con Yellowknife Bay.",
+   "inst": "Fotos de cerca, química por rayos X (como APXS)",
+   "muestra": "No"
+  },
+  "fuente": "https://doi.org/10.1002/2014JE004622",
+  "ubicacion": "Curiosity position on sol 395 (NASA/JPL MSL waypoints)",
+  "fotos": [
+   {
+    "archivo": "fotos/darwin_1.jpg",
+    "camara": "Mastcam",
+    "sol": 393,
+    "credito": "NASA/JPL-Caltech/MSSS",
+    "url": "https://mars.jpl.nasa.gov/msl-raw-images/msss/00393/mcam/0393ML0016220170200609E01_DXXX.jpg",
+    "imagen": "0393ML0016220170200609E01_DXXX"
+   },
+   {
+    "archivo": "fotos/darwin_2.jpg",
+    "camara": "Mastcam",
+    "sol": 393,
+    "credito": "NASA/JPL-Caltech/MSSS",
+    "url": "https://mars.jpl.nasa.gov/msl-raw-images/msss/00393/mcam/0393MR0016210090302148E01_DXXX.jpg",
+    "imagen": "0393MR0016210090302148E01_DXXX"
+   }
+  ]
+ }
+]

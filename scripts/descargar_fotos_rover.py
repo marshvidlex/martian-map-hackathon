@@ -27,7 +27,8 @@ import argparse, io, json, os, sys, time
 import requests
 from PIL import Image
 
-API = "https://mars.nasa.gov/rss/api/"
+API = "https://mars.nasa.gov/rss/api/"                       # Perseverance (Mars 2020)
+API_MSL = "https://mars.nasa.gov/api/v1/raw_image_items/"     # Curiosity (MSL)
 CARPETA_DATOS = os.path.join("docs", "data", "zonas")
 
 # Soles a revisar por lugar (el sol de la muestra y los de alrededor). Si un lugar no esta, se usa su "sol".
@@ -83,8 +84,82 @@ def fotos_del_sol(sol, sesion, paginas=8):
     return []
 
 
+def candidatas_m2020(sol, sesion):
+    salida = []
+    for img in fotos_del_sol(sol, sesion):
+        puntos, camara, credito = calificar(img)
+        f = img.get("image_files") or {}
+        url = f.get("large") or f.get("medium") or f.get("full_res")
+        if not url:
+            continue
+        ext = img.get("extended") or {}
+        dims = str(ext.get("dimension", "(0,0,0,0)")).strip("()").split(",")
+        try: w, h = int(dims[2]), int(dims[3])
+        except Exception: w = h = 0
+        if w and h and (w / h > 2 or h / w > 2):
+            continue  # tiras delgadas de panorama: en la ficha no se entienden
+        partes = img.get("imageid", "").split("_")
+        escena = partes[2][:8] if len(partes) > 2 else img.get("imageid", "")
+        salida.append({"puntos": puntos, "camara": camara, "credito": credito, "url": url,
+                       "full": f.get("full_res", url), "sol": sol, "area": w * h,
+                       "id": img.get("imageid", ""), "escena": escena})
+    return salida
+
+
+# ---------- Curiosity (MSL): otra API y otros nombres de camara ----------
+def calificar_msl(img):
+    inst = str(img.get("instrument", "")).upper()
+    if inst.startswith("MAST_"):
+        return 30, "Mastcam", "NASA/JPL-Caltech/MSSS"
+    if inst.startswith("MAHLI"):
+        return 20, "MAHLI", "NASA/JPL-Caltech/MSSS"
+    if inst.startswith("NAV_"):
+        return 15, "Navcam", "NASA/JPL-Caltech"
+    return 0, inst, "NASA/JPL-Caltech"  # Hazcam, ChemCam RMI, MARDI...: no se usan
+
+
+def fotos_del_sol_msl(sol, sesion, paginas=8):
+    formas = [{"condition_2": f"{sol}:sol:in"},
+              {"condition_2": f"{sol}:sol:gte", "condition_3": f"{sol}:sol:lte"}]
+    for filtro in formas:
+        todas = []
+        for pag in range(paginas):
+            params = {"order": "sol desc", "per_page": 100, "page": pag, "condition_1": "msl:mission", **filtro}
+            r = sesion.get(API_MSL, params=params, timeout=40)
+            r.raise_for_status()
+            js = r.json()
+            crudas = js.get("items", [])
+            todas += [i for i in crudas if int(i.get("sol", -1)) == sol and not i.get("is_thumbnail")
+                      and str(i.get("sample_type", "full")).lower().startswith("full")]
+            if not js.get("more") or len(crudas) < 100:
+                break
+            time.sleep(0.3)
+        if todas:
+            return todas
+    return []
+
+
+def candidatas_msl(sol, sesion):
+    salida = []
+    for img in fotos_del_sol_msl(sol, sesion):
+        puntos, camara, credito = calificar_msl(img)
+        url = img.get("https_url") or img.get("url")
+        if not url or puntos <= 0:
+            continue
+        dims = str(img.get("subframe_rect", "(0,0,0,0)")).strip("()").split(",")
+        try: w, h = int(dims[2]), int(dims[3])
+        except Exception: w = h = 0
+        if w and h and (w / h > 2 or h / w > 2 or w * h < 300 * 300):
+            continue  # tiras delgadas o recortes chicos
+        iid = img.get("imageid", "")
+        escena = iid[:4] + iid[6:13] if len(iid) > 13 else iid  # izquierda/derecha = misma escena
+        salida.append({"puntos": puntos, "camara": camara, "credito": credito, "url": url, "full": url,
+                       "sol": sol, "area": w * h, "id": iid, "escena": escena})
+    return salida
+
+
 # Cuantas fotos maximo de cada camara por lugar
-MAX_CAMARA = {"Mastcam-Z": 2, "WATSON": 1, "Navcam": 1}
+MAX_CAMARA = {"Mastcam-Z": 2, "WATSON": 1, "Navcam": 1, "Mastcam": 2, "MAHLI": 1}
 
 
 def elegir(candidatas, cuantas):
@@ -174,7 +249,7 @@ def main():
         n = len(p.get("fotos", [])) + 1
         arch = f"fotos/{pid}_m{n}.jpg"
         guardar(url, os.path.join(car, arch), sesion)
-        p["fotos"] = [{"archivo": arch, "camara": "Perseverance", "sol": p.get("sol"),
+        p["fotos"] = [{"archivo": arch, "camara": p.get("rover", "Perseverance"), "sol": p.get("sol"),
                        "credito": "NASA/JPL-Caltech", "url": url}] + p.get("fotos", [])
         print(f"{pid}: agregada a mano -> {arch}")
 
@@ -182,28 +257,12 @@ def main():
     for p in pois:
         if a.url or a.quitar or a.principal or (solo and p["id"] not in solo):
             continue
-        soles = SOLES.get(p["id"], [p.get("sol")])
+        soles = p.get("soles_fotos") or SOLES.get(p["id"], [p.get("sol")])
         candidatas = []
         for sol in soles:
             try:
-                for img in fotos_del_sol(sol, sesion):
-                    puntos, camara, credito = calificar(img)
-                    f = img.get("image_files") or {}
-                    url = f.get("large") or f.get("medium") or f.get("full_res")
-                    if not url:
-                        continue
-                    ext = img.get("extended") or {}
-                    dims = str(ext.get("dimension", "(0,0,0,0)")).strip("()").split(",")
-                    try: w, h = int(dims[2]), int(dims[3])
-                    except Exception: w = h = 0
-                    if w and h and (w / h > 2 or h / w > 2):
-                        continue  # tiras delgadas de panorama: en la ficha no se entienden
-                    area = w * h
-                    partes = img.get("imageid", "").split("_")
-                    escena = partes[2][:8] if len(partes) > 2 else img.get("imageid", "")
-                    candidatas.append({"puntos": puntos, "camara": camara, "credito": credito, "url": url,
-                                       "full": f.get("full_res", url), "sol": sol, "area": area,
-                                       "id": img.get("imageid", ""), "escena": escena})
+                buscar = candidatas_msl if p.get("mision") == "msl" else candidatas_m2020
+                candidatas += buscar(sol, sesion)
             except Exception as e:
                 print(f"  {p['id']} sol {sol}: error {e}")
             if sum(1 for c in candidatas if c["puntos"] >= 20) >= a.por_lugar:

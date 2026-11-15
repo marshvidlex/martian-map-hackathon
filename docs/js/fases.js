@@ -143,6 +143,8 @@ function pintarAccion() {
     }
   } else {
     estado = `<p class="fase-estado${ultimaMision ? " ok" : ""}">${ultimaMision ? "✓ " + t("f_plan_ok", { n: paradas.length - 1 }) : t("f_plan_sin")}</p>`;
+    const rc = window.resumenCiencia && resumenCiencia();
+    if (rc) estado += `<p class="fase-estado ciencia">★ ${t("ci_resumen", { l: rc.lugares, t: rc.total, o: rc.objetivos, to: rc.totalObjetivos })}</p>`;
   }
   const falta = faltaPara(siguiente);
   boton = `<button class="btn-principal" id="btn-fase-sig" ${falta ? "disabled" : ""}>${t("f_btn_" + siguiente)} →</button>`;
@@ -176,6 +178,10 @@ function pintarChecklist() {
     items.push([!en.length ? "ok" : dentro ? "mal" : "prec", t("f_ck_crat"),
       !en.length ? t("f_ck_crat_no") : t("f_ck_crat_si", { n: en.length, d: dentro })]);
   }
+  // ciencia: objetivos cubiertos por la ruta
+  const rc = window.resumenCiencia && resumenCiencia();
+  if (rc) items.push([rc.objetivos ? "ok" : "prec", t("ci_ck"),
+    t("ci_resumen", { l: rc.lugares, t: rc.total, o: rc.objetivos, to: rc.totalObjetivos })]);
   // 4) oxigeno y 5) radiacion
   items.push([m.okOxigeno ? (m.oxigenoPct < 80 ? "ok" : "prec") : "mal", t("f_ck_o2"), `${m.oxigenoPct.toFixed(0)}%`]);
   items.push([m.okDosis ? "ok" : "mal", t("f_ck_dosis"), `${m.dosis.toFixed(2)} mSv`]);
@@ -211,8 +217,7 @@ function prepararRail() {
     const alternar = () => s.classList.toggle("plegada");
     h.addEventListener("click", alternar);
     h.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); alternar(); } });
-    const titulo = (h.dataset.i18n || "") + " " + (s.id || "");
-    if (/base|ciencia/.test(titulo)) s.classList.add("plegada");
+    if (/^(base|ciencia)$/.test(h.dataset.i18n || "")) s.classList.add("plegada"); // capas: mapa base y cientificas
   });
 }
 
@@ -236,7 +241,7 @@ function sincronizar() {
 }
 let firmaCk = "";
 function pintarChecklistSiCambio() {
-  const firma = ultimaMision ? `${ultimaMision.distancia}|${ultimaMision.go}|${(window.CRATER && CRATER.enRuta || []).length}|${IDIOMA}` : "";
+  const firma = ultimaMision ? `${paradas.length}|${ultimaMision.distancia}|${ultimaMision.go}|${(window.CRATER && CRATER.enRuta || []).length}|${IDIOMA}` : "";
   if (firma !== firmaCk) { firmaCk = firma; pintarChecklist(); }
 }
 

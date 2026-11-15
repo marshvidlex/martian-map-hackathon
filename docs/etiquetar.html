@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Martian Map · Crater ground truth</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body { margin: 0; background: #0B0F17; color: #E6EAF2; font-family: Inter, system-ui, sans-serif; }
+  header { display: flex; align-items: center; gap: 16px; padding: 12px 20px; background: #0E131D; border-bottom: 1px solid #222B3B; flex-wrap: wrap; }
+  h1 { margin: 0; font-size: 16px; letter-spacing: 0.1em; }
+  main { display: flex; gap: 20px; padding: 20px; flex-wrap: wrap; }
+  canvas { background: #1A1714; border: 1px solid #2B3548; border-radius: 10px; cursor: crosshair; max-width: 100%; touch-action: none; }
+  aside { flex: 1 1 300px; max-width: 420px; display: flex; flex-direction: column; gap: 12px; font-size: 14px; line-height: 1.5; }
+  button { min-height: 44px; padding: 0 16px; border-radius: 10px; border: 1px solid #2B3548; background: #121826; color: #E6EAF2; font-size: 14px; cursor: pointer; }
+  button.principal { background: #F26B3A; color: #0B0F17; border: 0; font-weight: 700; }
+  .fila { display: flex; gap: 8px; flex-wrap: wrap; }
+  .caja { border: 1px solid #222B3B; border-radius: 12px; padding: 14px; background: #121826; }
+  .mono { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 13px; color: #9AA4B6; }
+  kbd { border: 1px solid #2B3548; border-radius: 4px; padding: 0 5px; font-size: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>CRATER GROUND TRUTH</h1>
+  <span class="mono" id="progreso"></span>
+  <span style="flex:1"></span>
+  <button id="btn-ant">← Previous</button>
+  <button id="btn-sig" class="principal">Next tile →</button>
+</header>
+<main>
+  <canvas id="lienzo" width="768" height="768" aria-label="HiRISE tile to label craters"></canvas>
+  <aside>
+    <div class="caja">
+      <b>How to label</b><br>
+      Mark <b>every crater you can see</b> in this 250 × 250 m HiRISE tile, even small ones.<br>
+      1. Press on the <b>center</b> of a crater.<br>
+      2. Drag to its <b>rim</b> and release.<br>
+      Click inside a circle with <kbd>Shift</kbd> to delete it. <kbd>Z</kbd> undoes the last one, <kbd>N</kbd> goes to the next tile.<br>
+      Skip things you are not sure about. Do not look at the app's crater layer while labeling.
+    </div>
+    <div class="caja mono" id="resumen"></div>
+    <div class="fila">
+      <button id="btn-descargar" class="principal">Download ground truth (JSON)</button>
+      <button id="btn-borrar">Clear this tile</button>
+    </div>
+    <p class="mono">Progress is saved in this browser. When you finish all tiles, download the file and save it as
+      <b>docs/data/zonas/&lt;zone&gt;/verdad_crateres.json</b>, then run
+      <b>python scripts/evaluar_crateres.py --zona &lt;zone&gt;</b>.</p>
+  </aside>
+</main>
+<script>
+// Herramienta para marcar a mano los crateres reales ("hoja de respuestas") en unas fotos HiRISE
+// de la zona. Con eso scripts/evaluar_crateres.py mide la precision y el recall de YOLO.
+const zona = new URLSearchParams(location.search).get("zona") || "jezero";
+const N_TESELAS = Number(new URLSearchParams(location.search).get("n") || 15);
+const base = `data/zonas/${zona}/`;
+const lienzo = document.getElementById("lienzo"), g = lienzo.getContext("2d");
+const CLAVE = `mm-verdad-${zona}`;
+let ind, teselas = [], k = 0, img = null, marcas = {}, arrastre = null;
+
+try { marcas = JSON.parse(localStorage.getItem(CLAVE) || "{}"); } catch { marcas = {}; }
+const guardar = () => { try { localStorage.setItem(CLAVE, JSON.stringify(marcas)); } catch {} };
+
+// px del lienzo -> metros dentro de la tesela
+const escala = () => ind.tesela_m / lienzo.width;
+
+function dibujar() {
+  g.clearRect(0, 0, lienzo.width, lienzo.height);
+  if (img) g.drawImage(img, 0, 0, lienzo.width, lienzo.height);
+  const lista = marcas[teselas[k]] || [];
+  g.lineWidth = 2;
+  for (const c of lista) {
+    g.strokeStyle = "#4FD1E8";
+    g.beginPath(); g.arc(c.u / escala(), c.v / escala(), c.d / 2 / escala(), 0, 2 * Math.PI); g.stroke();
+  }
+  if (arrastre) {
+    g.strokeStyle = "#F26B3A";
+    g.beginPath(); g.arc(arrastre.x, arrastre.y, arrastre.r, 0, 2 * Math.PI); g.stroke();
+  }
+  // barra de escala de 25 m
+  const px = 25 / escala();
+  g.fillStyle = "rgba(11,15,23,0.8)"; g.fillRect(10, lienzo.height - 34, px + 60, 24);
+  g.fillStyle = "#E6EAF2"; g.fillRect(16, lienzo.height - 24, px, 4);
+  g.font = "12px monospace"; g.fillText("25 m", px + 22, lienzo.height - 17);
+  const total = Object.values(marcas).reduce((s, l) => s + l.length, 0);
+  const hechas = teselas.filter((t) => marcas[t] && marcas[t].hecha).length;
+  document.getElementById("progreso").textContent = `Tile ${k + 1} / ${teselas.length} · ${teselas[k]}`;
+  document.getElementById("resumen").textContent =
+    `This tile: ${lista.length} craters · All tiles: ${total} craters · Visited: ${hechas}/${teselas.length}`;
+}
+
+function cargarTesela() {
+  const t = teselas[k];
+  marcas[t] = marcas[t] || [];
+  marcas[t].hecha = true; guardar();
+  img = new Image();
+  img.onload = dibujar;
+  img.src = `${base}hirise/f_${t}.jpg`;
+  dibujar();
+}
+
+const pos = (e) => {
+  const r = lienzo.getBoundingClientRect();
+  return { x: (e.clientX - r.left) * (lienzo.width / r.width), y: (e.clientY - r.top) * (lienzo.height / r.height) };
+};
+lienzo.addEventListener("pointerdown", (e) => {
+  const p = pos(e);
+  if (e.shiftKey) {
+    const lista = marcas[teselas[k]];
+    const i = lista.findIndex((c) => Math.hypot(c.u / escala() - p.x, c.v / escala() - p.y) <= c.d / 2 / escala());
+    if (i >= 0) { lista.splice(i, 1); guardar(); dibujar(); }
+    return;
+  }
+  arrastre = { x: p.x, y: p.y, r: 0 };
+  lienzo.setPointerCapture(e.pointerId);
+});
+lienzo.addEventListener("pointermove", (e) => {
+  if (!arrastre) return;
+  const p = pos(e); arrastre.r = Math.hypot(p.x - arrastre.x, p.y - arrastre.y); dibujar();
+});
+lienzo.addEventListener("pointerup", () => {
+  if (!arrastre) return;
+  if (arrastre.r > 3) {
+    marcas[teselas[k]].push({ u: arrastre.x * escala(), v: arrastre.y * escala(), d: 2 * arrastre.r * escala() });
+    guardar();
+  }
+  arrastre = null; dibujar();
+});
+
+function mover(paso) { k = Math.min(teselas.length - 1, Math.max(0, k + paso)); cargarTesela(); }
+document.getElementById("btn-sig").onclick = () => mover(1);
+document.getElementById("btn-ant").onclick = () => mover(-1);
+document.getElementById("btn-borrar").onclick = () => { marcas[teselas[k]].length = 0; guardar(); dibujar(); };
+lienzo.tabIndex = 0;
+lienzo.addEventListener("keydown", (e) => {
+  if (e.key === "z" || e.key === "Z") { marcas[teselas[k]].pop(); guardar(); dibujar(); }
+  if (e.key === "n" || e.key === "N") mover(1);
+});
+
+// Descarga: cada crater en metros de la zona (x al este desde el borde oeste, s al sur desde el norte)
+document.getElementById("btn-descargar").onclick = () => {
+  const salida = { zona, tesela_m: ind.tesela_m, teselas: [], crateres: [] };
+  for (const t of teselas) {
+    if (!marcas[t] || !marcas[t].hecha) continue;
+    const [i, j] = t.split("_").map(Number);
+    const x0 = ind.origen_m + i * ind.tesela_m, s0 = ind.origen_m + j * ind.tesela_m;
+    salida.teselas.push({ id: t, x0, s0 });
+    for (const c of marcas[t]) salida.crateres.push({ x: +(x0 + c.u).toFixed(1), s: +(s0 + c.v).toFixed(1), d: +c.d.toFixed(1), tesela: t });
+  }
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(salida, null, 1)], { type: "application/json" }));
+  a.download = "verdad_crateres.json"; a.click();
+};
+
+// Elige N teselas repartidas por toda la zona (siempre las mismas para que todos marquen lo mismo)
+fetch(`${base}hirise/indice.json`).then((r) => r.json()).then((d) => {
+  ind = d;
+  const todas = d.fotos.slice().sort((a, b) => {
+    const [ia, ja] = a.split("_").map(Number), [ib, jb] = b.split("_").map(Number);
+    return ja - jb || ia - ib;
+  });
+  const paso = todas.length / N_TESELAS;
+  for (let n = 0; n < N_TESELAS; n++) teselas.push(todas[Math.floor(n * paso + paso / 2) % todas.length]);
+  cargarTesela();
+});
+</script>
+</body>
+</html>

@@ -1,1 +1,218 @@
-[]
+[
+ {
+  "id": "butler",
+  "nombre": "Octavia E. Butler Landing",
+  "lat": 18.444543,
+  "lon": 77.450947,
+  "objetivo": "piso",
+  "tipo": "landing",
+  "sol": 14,
+  "que_estudiar": "Where Perseverance landed on 18 Feb 2021. Flat lava floor of the Máaz formation: a known-safe reference point to start the EVA and calibrate instruments.",
+  "instrumento": "Context photos, hand lens",
+  "muestra": "No",
+  "en": {
+   "que": "Where Perseverance landed on 18 Feb 2021. Flat lava floor of the Máaz formation: a known-safe reference point to start the EVA and calibrate instruments.",
+   "inst": "Context photos, hand lens",
+   "muestra": "No"
+  },
+  "es": {
+   "que": "Donde aterrizó Perseverance el 18 de febrero de 2021. Piso plano de lava de la formación Máaz: un punto de referencia seguro para empezar la caminata y calibrar instrumentos.",
+   "inst": "Fotos de contexto, lupa",
+   "muestra": "No"
+  },
+  "fuente": "https://science.nasa.gov/mission/mars-2020-perseverance/",
+  "ubicacion": "Perseverance position on sol 14 (M20_traverse.json)"
+ },
+ {
+  "id": "rochette",
+  "nombre": "Rochette · Artuby Ridge",
+  "lat": 18.430739,
+  "lon": 77.444366,
+  "objetivo": "piso",
+  "tipo": "ciencia",
+  "sol": 194,
+  "que_estudiar": "First rock cores of Mars 2020 (Montdenier, Montagnac). Igneous rock of the Máaz formation with salts left by water: tells how long water stayed on the crater floor.",
+  "instrumento": "Abrade the surface, X-ray chemistry (like PIXL), core drill",
+  "muestra": "Rock core",
+  "en": {
+   "que": "First rock cores of Mars 2020 (Montdenier, Montagnac). Igneous rock of the Máaz formation with salts left by water: tells how long water stayed on the crater floor.",
+   "inst": "Abrade the surface, X-ray chemistry (like PIXL), core drill",
+   "muestra": "Rock core"
+  },
+  "es": {
+   "que": "Primeros núcleos de roca de Mars 2020 (Montdenier, Montagnac). Roca ígnea de la formación Máaz con sales que dejó el agua: indica cuánto tiempo hubo agua en el piso del cráter.",
+   "inst": "Desgastar la superficie, química por rayos X (como PIXL), taladro de núcleos",
+   "muestra": "Núcleo de roca"
+  },
+  "fuente": "https://science.nasa.gov/mission/mars-2020-perseverance/mars-rock-samples",
+  "ubicacion": "Perseverance position on sol 194 (M20_traverse.json)"
+ },
+ {
+  "id": "brac",
+  "nombre": "Brac · South Séítah",
+  "lat": 18.433964,
+  "lon": 77.443019,
+  "objetivo": "piso",
+  "tipo": "ciencia",
+  "sol": 262,
+  "que_estudiar": "Olivine-rich igneous rock that cooled slowly underground, later altered by water into carbonates. Samples Salette and Coulettes. Key to dating the crater floor.",
+  "instrumento": "Hand lens, mineral spectrometer, core drill",
+  "muestra": "Rock core",
+  "en": {
+   "que": "Olivine-rich igneous rock that cooled slowly underground, later altered by water into carbonates. Samples Salette and Coulettes. Key to dating the crater floor.",
+   "inst": "Hand lens, mineral spectrometer, core drill",
+   "muestra": "Rock core"
+  },
+  "es": {
+   "que": "Roca ígnea rica en olivino que se enfrió lento bajo tierra y luego el agua alteró a carbonatos. Muestras Salette y Coulettes. Clave para fechar el piso del cráter.",
+   "inst": "Lupa, espectrómetro de minerales, taladro de núcleos",
+   "muestra": "Núcleo de roca"
+  },
+  "fuente": "https://science.nasa.gov/mission/mars-2020-perseverance/mars-rock-samples",
+  "ubicacion": "Perseverance position on sol 262 (M20_traverse.json)"
+ },
+ {
+  "id": "issole",
+  "nombre": "Issole · Séítah",
+  "lat": 18.432661,
+  "lon": 77.441373,
+  "objetivo": "piso",
+  "tipo": "ciencia",
+  "sol": 298,
+  "que_estudiar": "Resistant, layered ridge of the Séítah formation. Samples Robine and Malay contain carbonates and sulfates: minerals that form in water.",
+  "instrumento": "Mineral spectrometer, core drill",
+  "muestra": "Rock core",
+  "en": {
+   "que": "Resistant, layered ridge of the Séítah formation. Samples Robine and Malay contain carbonates and sulfates: minerals that form in water.",
+   "inst": "Mineral spectrometer, core drill",
+   "muestra": "Rock core"
+  },
+  "es": {
+   "que": "Cresta resistente y en capas de la formación Séítah. Las muestras Robine y Malay tienen carbonatos y sulfatos: minerales que se forman en agua.",
+   "inst": "Espectrómetro de minerales, taladro de núcleos",
+   "muestra": "Núcleo de roca"
+  },
+  "fuente": "https://www.mn.uio.no/geo/english/research/projects/msr-asl-analogue-sample-library/msr-asl/three-forks/",
+  "ubicacion": "Perseverance position on sol 298 (M20_traverse.json)"
+ },
+ {
+  "id": "skinner",
+  "nombre": "Skinner Ridge · Delta front",
+  "lat": 18.458895,
+  "lon": 77.406168,
+  "objetivo": "vida",
+  "tipo": "ciencia",
+  "sol": 490,
+  "que_estudiar": "First sedimentary cores of the mission (Swift Run, Skyland), at the front of the delta where a river entered the ancient lake. Layered sandstone carried by water.",
+  "instrumento": "Close-up imaging of layers, core drill",
+  "muestra": "Rock core",
+  "en": {
+   "que": "First sedimentary cores of the mission (Swift Run, Skyland), at the front of the delta where a river entered the ancient lake. Layered sandstone carried by water.",
+   "inst": "Close-up imaging of layers, core drill",
+   "muestra": "Rock core"
+  },
+  "es": {
+   "que": "Primeros núcleos sedimentarios de la misión (Swift Run, Skyland), en el frente del delta, donde un río entraba al lago antiguo. Arenisca en capas que trajo el agua.",
+   "inst": "Fotos de cerca de las capas, taladro de núcleos",
+   "muestra": "Núcleo de roca"
+  },
+  "fuente": "https://science.nasa.gov/mission/mars-2020-perseverance/mars-rock-samples",
+  "ubicacion": "Perseverance position on sol 490 (M20_traverse.json)"
+ },
+ {
+  "id": "wildcat",
+  "nombre": "Wildcat Ridge · Hawksbill Gap",
+  "lat": 18.458647,
+  "lon": 77.405925,
+  "objetivo": "vida",
+  "tipo": "ciencia",
+  "sol": 509,
+  "que_estudiar": "Fine mudstone from an evaporating salty lake. SHERLOC found the most abundant organic molecules of the mission here, linked to sulfate minerals: a top target in the search for ancient life.",
+  "instrumento": "UV Raman for organics (like SHERLOC), core drill",
+  "muestra": "Rock core",
+  "en": {
+   "que": "Fine mudstone from an evaporating salty lake. SHERLOC found the most abundant organic molecules of the mission here, linked to sulfate minerals: a top target in the search for ancient life.",
+   "inst": "UV Raman for organics (like SHERLOC), core drill",
+   "muestra": "Rock core"
+  },
+  "es": {
+   "que": "Lodolita fina de un lago salado que se evaporaba. SHERLOC encontró aquí la mayor cantidad de moléculas orgánicas de la misión, ligadas a sulfatos: objetivo principal en la búsqueda de vida antigua.",
+   "inst": "Raman UV para orgánicos (como SHERLOC), taladro de núcleos",
+   "muestra": "Núcleo de roca"
+  },
+  "fuente": "https://www.jpl.nasa.gov/news/nasas-perseverance-rover-investigates-geologically-rich-mars-terrain/",
+  "ubicacion": "Perseverance position on sol 509 (M20_traverse.json)"
+ },
+ {
+  "id": "amalik",
+  "nombre": "Amalik · Delta front",
+  "lat": 18.450726,
+  "lon": 77.40144,
+  "objetivo": "vida",
+  "tipo": "ciencia",
+  "sol": 575,
+  "que_estudiar": "Carbonate-cemented sandstone, less oxidized and richer in olivine than the rest of the delta. Samples Shuyak and Mageik.",
+  "instrumento": "Mineral spectrometer, core drill",
+  "muestra": "Rock core",
+  "en": {
+   "que": "Carbonate-cemented sandstone, less oxidized and richer in olivine than the rest of the delta. Samples Shuyak and Mageik.",
+   "inst": "Mineral spectrometer, core drill",
+   "muestra": "Rock core"
+  },
+  "es": {
+   "que": "Arenisca cementada con carbonatos, menos oxidada y con más olivino que el resto del delta. Muestras Shuyak y Mageik.",
+   "inst": "Espectrómetro de minerales, taladro de núcleos",
+   "muestra": "Núcleo de roca"
+  },
+  "fuente": "https://www.mn.uio.no/geo/english/research/projects/msr-asl-analogue-sample-library/msr-asl/three-forks/",
+  "ubicacion": "Perseverance position on sol 575 (M20_traverse.json)"
+ },
+ {
+  "id": "threeforks",
+  "nombre": "Three Forks Sample Depot",
+  "lat": 18.452766,
+  "lon": 77.408078,
+  "objetivo": "muestras",
+  "tipo": "deposito",
+  "sol": 665,
+  "que_estudiar": "Humanity's first sample depot on another planet: 10 titanium tubes dropped between Dec 2022 and Jan 2023 for Mars Sample Return. Crew task: inspect the tubes and bring them back to the habitat.",
+  "instrumento": "Tube inspection, tongs, sample bag",
+  "muestra": "Retrieve tubes",
+  "en": {
+   "que": "Humanity's first sample depot on another planet: 10 titanium tubes dropped between Dec 2022 and Jan 2023 for Mars Sample Return. Crew task: inspect the tubes and bring them back to the habitat.",
+   "inst": "Tube inspection, tongs, sample bag",
+   "muestra": "Retrieve tubes"
+  },
+  "es": {
+   "que": "El primer depósito de muestras en otro planeta: 10 tubos de titanio que se dejaron entre diciembre de 2022 y enero de 2023 para traerlos a la Tierra. Tarea: revisar los tubos y llevarlos al hábitat.",
+   "inst": "Revisión de tubos, pinzas, bolsa de muestras",
+   "muestra": "Recoger tubos"
+  },
+  "fuente": "https://www.jpl.nasa.gov/news/nasas-perseverance-rover-completes-mars-sample-depot/",
+  "ubicacion": "Perseverance position on sol 665 (M20_traverse.json)"
+ },
+ {
+  "id": "belva",
+  "nombre": "Belva crater rim · Echo Creek",
+  "lat": 18.482929,
+  "lon": 77.369008,
+  "objetivo": "vida",
+  "tipo": "ciencia",
+  "sol": 772,
+  "que_estudiar": "A 0.9 km impact crater that cuts through the delta like a natural road cut, exposing layers and dipping beds from an ancient river sandbar. Viewpoint, do not enter: steep walls.",
+  "instrumento": "Panoramic and telephoto imaging",
+  "muestra": "No",
+  "en": {
+   "que": "A 0.9 km impact crater that cuts through the delta like a natural road cut, exposing layers and dipping beds from an ancient river sandbar. Viewpoint, do not enter: steep walls.",
+   "inst": "Panoramic and telephoto imaging",
+   "muestra": "No"
+  },
+  "es": {
+   "que": "Cráter de impacto de 0.9 km que corta el delta como un corte de carretera natural y deja ver capas inclinadas de un antiguo banco de arena de río. Mirador, no entrar: paredes empinadas.",
+   "inst": "Fotos panorámicas y con teleobjetivo",
+   "muestra": "No"
+  },
+  "fuente": "https://www.marsdaily.com/reports/Perseverance_captures_view_of_Mars_Belva_Crater_999.html",
+  "ubicacion": "Perseverance position on sol 772 (M20_traverse.json)"
+ }
+]

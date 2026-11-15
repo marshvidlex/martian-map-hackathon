@@ -130,7 +130,8 @@ async function iniciar() {
   if (info.rugosidad_max) document.getElementById("p-rugosidad").value = info.rugosidad_max;
 
   // --- Puntos de interes (con foto opcional) ---
-  for (const p of pois) {
+  // ciencia.js los dibuja como estrellas con su objetivo cientifico; si no esta, van circulos simples
+  for (const p of (window.iniciarCiencia ? [] : pois)) {
     // si el punto no cae dentro de esta zona no se dibuja
     if (p.lat < info.sur || p.lat > info.norte || p.lon < info.oeste || p.lon > info.este) continue;
     const foto = p.foto ? `<br><img src="${p.foto}" width="200" alt="${p.nombre}">` : "";
@@ -148,6 +149,7 @@ async function iniciar() {
   // --- Crateres detectados con YOLO (crateres.js, opcional) ---
   if (window.iniciarCrateres) await iniciarCrateres();
   if (window.iniciarAterrizaje) await iniciarAterrizaje(); // zonas seguras para aterrizar (aterrizaje.js)
+  if (window.iniciarCiencia) await iniciarCiencia(); // objetivos cientificos (ciencia.js)
 
   // --- Eventos ---
   mapa.on("click", alTocarMapa);
@@ -329,11 +331,13 @@ function lonlatAMapa(lon, lat) {
 function nombreParada(k) {
   if (k === 0) return t("habitat");
   const [y, x] = celdaAMapa(paradas[k]);
+  let mejor = null, dmin = 150; // el punto de interes MAS cercano a menos de 150 m
   for (const p of pois) {
     const [py, px] = lonlatAMapa(p.lon, p.lat);
-    if (Math.hypot(px - x, py - y) < 150) return p.nombre;
+    const d = Math.hypot(px - x, py - y);
+    if (d < dmin) { dmin = d; mejor = p; }
   }
-  return t("parada_n", { n: k });
+  return mejor ? mejor.nombre : t("parada_n", { n: k });
 }
 
 // ---------- Interaccion ----------

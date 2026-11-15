@@ -2,7 +2,7 @@
 // Estrategia "primero la red": si hay internet trae lo nuevo y lo guarda;
 // si no hay, usa la copia guardada. Asi no te quedas con versiones viejas mientras programas.
 
-const CACHE = "martian-map-v30"; // si cambias la lista de archivos, sube el numero
+const CACHE = "martian-map-v31"; // si cambias la lista de archivos, sube el numero
 // Ojo: en index.html los css/js llevan ?v=NN; subelo junto con este numero para que el navegador no use copias viejas.
 
 const ARCHIVOS = [
@@ -17,6 +17,7 @@ const ARCHIVOS = [
   "js/app.js",
   "js/crateres.js",
   "js/aterrizaje.js",
+  "js/ciencia.js",
   "js/explorador.js",
   "js/habitat3d.js",
   "js/replay.js",
@@ -47,7 +48,7 @@ for (let z = 0; z <= 3; z++) {
 // Datos de las zonas que ya vienen en el repo (si alguno no existe, no pasa nada)
 const DATOS_ZONA = ["data/zonas.json"].concat(
   ["info.json", "cuadricula.json", "foto.png", "elevacion.png", "pendiente.png", "rugosidad.png",
-    "geologia.png", "crateres.json", "aterrizaje.json", "aterrizaje.png", "M20_traverse.json", "poi.json",
+    "geologia.png", "crateres.json", "ciencia.json", "aterrizaje.json", "aterrizaje.png", "M20_traverse.json", "poi.json",
     "hirise/indice.json"].map((a) => `data/zonas/jezero/${a}`));
 
 // Al instalar: guardamos la app, el mapa de Marte y los datos de Jezero.

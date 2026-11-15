@@ -1,0 +1,41 @@
+[
+ {
+  "id": "vida",
+  "color": "#3DDC84",
+  "en": {
+   "titulo": "Search for signs of ancient life",
+   "desc": "Study the lake and river sediments of the delta, where organic matter is best preserved."
+  },
+  "es": {
+   "titulo": "Buscar señales de vida antigua",
+   "desc": "Estudiar los sedimentos de lago y río del delta, donde mejor se conserva la materia orgánica."
+  },
+  "fuente": "https://www.jpl.nasa.gov/news/nasas-perseverance-rover-investigates-geologically-rich-mars-terrain/"
+ },
+ {
+  "id": "piso",
+  "color": "#4FD1E8",
+  "en": {
+   "titulo": "Read the history of the crater floor",
+   "desc": "Visit the igneous rocks of Máaz and Séítah that water altered, to learn when and how long the lake existed."
+  },
+  "es": {
+   "titulo": "Leer la historia del piso del cráter",
+   "desc": "Visitar las rocas ígneas de Máaz y Séítah que alteró el agua, para saber cuándo y cuánto tiempo existió el lago."
+  },
+  "fuente": "https://science.nasa.gov/mission/mars-2020-perseverance/mars-rock-samples"
+ },
+ {
+  "id": "muestras",
+  "color": "#FFB547",
+  "en": {
+   "titulo": "Recover the Three Forks samples",
+   "desc": "Inspect and bring back the tubes Perseverance left for a future return to Earth."
+  },
+  "es": {
+   "titulo": "Recuperar las muestras de Three Forks",
+   "desc": "Revisar y llevar al hábitat los tubos que dejó Perseverance para traerlos a la Tierra."
+  },
+  "fuente": "https://www.jpl.nasa.gov/news/nasas-perseverance-rover-completes-mars-sample-depot/"
+ }
+]

@@ -1,0 +1,229 @@
+{
+ "resumen": {
+  "tramos": 24,
+  "tramos_con_ruta": 24,
+  "largo_tramo_m": 800,
+  "rover_caminable_pct": 99.8,
+  "ruta_vs_rover_largo_pct": 71,
+  "desviacion_media_m": 43,
+  "dentro_50m_pct": 69
+ },
+ "tramos": [
+  {
+   "ok": true,
+   "largo_rover_m": 801,
+   "largo_ruta_m": 370,
+   "recta_m": 340,
+   "desviacion_media_m": 11,
+   "dentro_50m_pct": 100,
+   "pendiente_max": 2
+  },
+  {
+   "ok": true,
+   "largo_rover_m": 801,
+   "largo_ruta_m": 685,
+   "recta_m": 669,
+   "desviacion_media_m": 50,
+   "dentro_50m_pct": 55,
+   "pendiente_max": 5.5
+  },
+  {
+   "ok": true,
+   "largo_rover_m": 800,
+   "largo_ruta_m": 719,
+   "recta_m": 666,
+   "desviacion_media_m": 23,
+   "dentro_50m_pct": 94,
+   "pendiente_max": 4.5
+  },
+  {
+   "ok": true,
+   "largo_rover_m": 803,
+   "largo_ruta_m": 298,
+   "recta_m": 270,
+   "desviacion_media_m": 14,
+   "dentro_50m_pct": 100,
+   "pendiente_max": 3.5
+  },
+  {
+   "ok": true,
+   "largo_rover_m": 801,
+   "largo_ruta_m": 413,
+   "recta_m": 414,
+   "desviacion_media_m": 71,
+   "dentro_50m_pct": 44,
+   "pendiente_max": 4.2
+  },
+  {
+   "ok": true,
+   "largo_rover_m": 801,
+   "largo_ruta_m": 603,
+   "recta_m": 583,
+   "desviacion_media_m": 21,
+   "dentro_50m_pct": 90,
+   "pendiente_max": 2.1
+  },
+  {
+   "ok": true,
+   "largo_rover_m": 800,
+   "largo_ruta_m": 313,
+   "recta_m": 288,
+   "desviacion_media_m": 7,
+   "dentro_50m_pct": 100,
+   "pendiente_max": 3.6
+  },
+  {
+   "ok": true,
+   "largo_rover_m": 813,
+   "largo_ruta_m": 709,
+   "recta_m": 705,
+   "desviacion_media_m": 71,
+   "dentro_50m_pct": 33,
+   "pendiente_max": 7.6
+  },
+  {
+   "ok": true,
+   "largo_rover_m": 803,
+   "largo_ruta_m": 726,
+   "recta_m": 660,
+   "desviacion_media_m": 87,
+   "dentro_50m_pct": 34,
+   "pendiente_max": 5.2
+  },
+  {
+   "ok": true,
+   "largo_rover_m": 801,
+   "largo_ruta_m": 753,
+   "recta_m": 704,
+   "desviacion_media_m": 40,
+   "dentro_50m_pct": 58,
+   "pendiente_max": 5.5
+  },
+  {
+   "ok": true,
+   "largo_rover_m": 800,
+   "largo_ruta_m": 822,
+   "recta_m": 759,
+   "desviacion_media_m": 32,
+   "dentro_50m_pct": 74,
+   "pendiente_max": 3.5
+  },
+  {
+   "ok": true,
+   "largo_rover_m": 800,
+   "largo_ruta_m": 858,
+   "recta_m": 785,
+   "desviacion_media_m": 79,
+   "dentro_50m_pct": 33,
+   "pendiente_max": 2.4
+  },
+  {
+   "ok": true,
+   "largo_rover_m": 801,
+   "largo_ruta_m": 788,
+   "recta_m": 737,
+   "desviacion_media_m": 18,
+   "dentro_50m_pct": 95,
+   "pendiente_max": 6.6
+  },
+  {
+   "ok": true,
+   "largo_rover_m": 800,
+   "largo_ruta_m": 231,
+   "recta_m": 212,
+   "desviacion_media_m": 15,
+   "dentro_50m_pct": 100,
+   "pendiente_max": 3.4
+  },
+  {
+   "ok": true,
+   "largo_rover_m": 807,
+   "largo_ruta_m": 493,
+   "recta_m": 456,
+   "desviacion_media_m": 54,
+   "dentro_50m_pct": 57,
+   "pendiente_max": 11.1
+  },
+  {
+   "ok": true,
+   "largo_rover_m": 800,
+   "largo_ruta_m": 355,
+   "recta_m": 348,
+   "desviacion_media_m": 45,
+   "dentro_50m_pct": 56,
+   "pendiente_max": 7.7
+  },
+  {
+   "ok": true,
+   "largo_rover_m": 801,
+   "largo_ruta_m": 321,
+   "recta_m": 300,
+   "desviacion_media_m": 52,
+   "dentro_50m_pct": 53,
+   "pendiente_max": 10.8
+  },
+  {
+   "ok": true,
+   "largo_rover_m": 802,
+   "largo_ruta_m": 472,
+   "recta_m": 463,
+   "desviacion_media_m": 65,
+   "dentro_50m_pct": 44,
+   "pendiente_max": 8.1
+  },
+  {
+   "ok": true,
+   "largo_rover_m": 804,
+   "largo_ruta_m": 673,
+   "recta_m": 625,
+   "desviacion_media_m": 83,
+   "dentro_50m_pct": 38,
+   "pendiente_max": 10.1
+  },
+  {
+   "ok": true,
+   "largo_rover_m": 800,
+   "largo_ruta_m": 773,
+   "recta_m": 726,
+   "desviacion_media_m": 22,
+   "dentro_50m_pct": 100,
+   "pendiente_max": 12.9
+  },
+  {
+   "ok": true,
+   "largo_rover_m": 801,
+   "largo_ruta_m": 688,
+   "recta_m": 651,
+   "desviacion_media_m": 20,
+   "dentro_50m_pct": 100,
+   "pendiente_max": 11.1
+  },
+  {
+   "ok": true,
+   "largo_rover_m": 800,
+   "largo_ruta_m": 569,
+   "recta_m": 519,
+   "desviacion_media_m": 99,
+   "dentro_50m_pct": 19,
+   "pendiente_max": 8.9
+  },
+  {
+   "ok": true,
+   "largo_rover_m": 800,
+   "largo_ruta_m": 471,
+   "recta_m": 457,
+   "desviacion_media_m": 25,
+   "dentro_50m_pct": 84,
+   "pendiente_max": 5.4
+  },
+  {
+   "ok": true,
+   "largo_rover_m": 805,
+   "largo_ruta_m": 529,
+   "recta_m": 518,
+   "desviacion_media_m": 27,
+   "dentro_50m_pct": 90,
+   "pendiente_max": 4.5
+  }
+ ]
+}

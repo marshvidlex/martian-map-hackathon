@@ -739,3 +739,34 @@ body:not(.fase-land).con-fases #aterrizaje-control #btn-sugerir-aterrizaje { dis
 #checklist3d li small { font-size: 12px; color: var(--tenue); }
 #checklist3d .btn-principal:disabled { opacity: 0.4; cursor: not-allowed; }
 body:not(.fase-review) #checklist3d { display: none; }
+
+/* =================== Objetivos cientificos (ciencia.js) =================== */
+.poi-estrella span {
+  display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%;
+  color: #0B0F17; font-size: 15px; border: 2px solid #0B0F17; box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35);
+}
+.poi-ficha { display: flex; flex-direction: column; gap: 6px; font-size: 13px; line-height: 1.45; min-width: 240px; }
+.poi-ficha b { font-size: 15px; }
+.poi-ficha .poi-obj { font-size: 11px; letter-spacing: 0.06em; font-weight: 600; }
+.poi-ficha p { margin: 0; }
+.poi-ficha dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; margin: 0; font-size: 12px; }
+.poi-ficha dt { color: var(--tenue); }
+.poi-ficha dd { margin: 0; }
+#seccion-ciencia #ci-cuerpo { display: flex; flex-direction: column; gap: 10px; }
+#seccion-ciencia .nota { margin: 0; }
+.ci-objetivo { border: 1px solid var(--linea); border-left: 3px solid var(--c); border-radius: 10px; padding: 8px 10px; display: flex; flex-direction: column; gap: 6px; }
+.ci-objetivo label { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+.ci-objetivo label input { margin-top: 3px; accent-color: var(--acento); }
+.ci-objetivo label span { display: flex; flex-direction: column; gap: 2px; }
+.ci-objetivo label b { font-size: 13px; font-weight: 600; }
+.ci-objetivo label small { font-size: 12px; color: var(--tenue); line-height: 1.4; }
+.ci-objetivo ul { list-style: none; margin: 0; padding: 0 0 0 26px; display: flex; flex-direction: column; gap: 2px; }
+.ci-objetivo li button {
+  display: flex; align-items: center; gap: 8px; width: 100%; min-height: 32px; padding: 2px 6px; border: 0; border-radius: 6px;
+  background: transparent; color: var(--texto); font-size: 12px; text-align: left; cursor: pointer;
+}
+.ci-objetivo li button:hover { background: #1A2232; }
+.ci-objetivo li i { font-style: normal; color: var(--c); }
+.ci-objetivo li em { margin-left: auto; font-style: normal; color: var(--go); }
+.ci-objetivo li button.en-ruta span { color: #9FD9B6; }
+#fase-accion .fase-estado.ciencia { color: #FFE2B0; font-size: 13px; }

@@ -6,6 +6,49 @@
 
 Built for the NASA Space Apps Challenge 2026 (Querétaro, Mexico).
 
+**From orbit to boots on the ground:** choose a site on Mars, land safely, plan the walk, check it in 3D and walk it with a helmet HUD. All offline, all with real NASA/USGS data.
+
+---
+
+## Mission flow (5 phases)
+
+The app follows the same order NASA uses to go from site selection to a surface traverse. A bar at the top shows the phase; each phase shows only what that decision needs.
+
+| Phase | What the crew does | What the app shows |
+|---|---|---|
+| 1. MARS | Choose a landing site on the global map | Viking colour mosaic, 10 historic landing sites, which ones have terrain data ready |
+| 2. LAND | Choose where the habitat touches down | Landing-safety map (green / amber / red) and the 3 safest spots; red areas are refused with the reason and the nearest safe spot |
+| 3. PLAN | Place the EVA stops | Safest walking route, oxygen, dose, GO / NO-GO; layers grouped as Safety (open), Science and Base map (folded) |
+| 4. REVIEW | Check and approve | 3D table + mission checklist: landing spot, slope, craters on the route, oxygen, radiation |
+| 5. EXECUTE | Walk | First-person helmet visor with live telemetry, alerts and an abort button |
+
+---
+
+## Validation (how we know it works)
+
+| Check | Result |
+|---|---|
+| Landing safety vs. the real Perseverance landing spot (18.4446° N, 77.4509° E) | Marked **safe (green)** by our analysis |
+| Perseverance's real path is walkable for our planner | **99.8 %** of the 20 m cells the rover drove through pass our 15° slope / 1 m roughness limits |
+| Our route vs. Perseverance's real path (24 legs of 800 m inside the zone) | Mean distance between both paths **43 m**; **69 %** of our route lies within 50 m of the rover's path; our route is **29 % shorter** (the rover also detours to science targets) |
+| Crater detection precision / recall | Measured against a hand-labelled ground truth with `docs/etiquetar.html` + `scripts/evaluar_crateres.py` — see `docs/data/zonas/jezero/evaluacion_crateres.json` |
+| Surface radiation | Uses the dose rate measured by Curiosity's RAD (0.67 mSv/day) |
+
+Reproduce the route check with Node.js: `node scripts/validar_ruta.js jezero` (it runs the same `ruta.js` as the web page).
+
+### Real data vs. demo values
+
+| Value | Real or demo | Source |
+|---|---|---|
+| Terrain elevation, slope, roughness | Real | CTX and HiRISE DTMs (USGS) |
+| Landing limits: slope ≤ 15° at 5 m and 20–40 m, ≤ 5° at 200–500 m, rocks ≤ 0.6 m | Real (engineering constraints) | JPL, *MSL Landing Site Selection – User's Guide to Engineering Constraints* |
+| Surface radiation 0.67 mSv/day | Real (measured) | Hassler et al. 2014, Curiosity RAD |
+| Geologic units | Real | USGS SIM 3464 |
+| Perseverance path and landing spot | Real | NASA/JPL `M20_traverse.json` |
+| Walking speed 3 km/h (Tobler) | Model | Tobler 1993 |
+| Suit oxygen 8 h, 20 % reserve, 30 min per stop, load 20 kg | Demo | Our assumptions |
+| Solar storm ×50, dose limit 1 mSv per EVA | Demo | Our assumptions |
+
 ---
 
 ## What it does
@@ -41,6 +84,10 @@ Built for the NASA Space Apps Challenge 2026 (Querétaro, Mexico).
 - Crater rims drawn on the ground around you (amber = on your route) and on the minimap. You leave through the airlock of a full-size habitat.
 - Speed x1 to x300, gyroscope on tablets, minimap.
 - **Replay Perseverance mission:** drive the real NASA/JPL traverse of the rover from Mastcam-Z height, with sol and Earth date.
+
+### 4. Global Mars map and landing safety
+- Start screen with the whole planet (Viking MDIM 2.1 colour mosaic, cut into tiles that ship with the app) and 10 historic landing sites. Sites with processed terrain are marked **READY**; selecting one shows only that site's data (photo, HiRISE, traverse, craters) on the globe.
+- **Landing safety** (`scripts/aterrizaje.py`): every 10 m of the site is graded safe / caution / no-landing using the MSL engineering constraints, craters (YOLO + relief check, rim plus margin), sand dunes (geologic unit Aeb) and a 50 m clear radius. The habitat cannot be placed on a red cell; "Suggest landing sites" marks the 3 spots farthest from any hazard.
 
 ### Other
 - English / Spanish toggle.
@@ -149,6 +196,14 @@ pip install -r requirements.txt
    It writes `crateres.json` (about 8 min for Jezero on an Apple M-series GPU; it uses CUDA, MPS or CPU).
    Add `--cache crudos.json` to keep the raw detections; then `--cache crudos.json --reusar` re-runs only the filters in seconds.
 
+7. Relief check and landing safety (after the craters, in this order):
+   ```bash
+   python scripts/validar_crateres.py --zona <site>
+   python scripts/aterrizaje.py --zona <site>
+   ```
+
+Shortcut for steps 1–2: `python scripts/descargar_zona.py --zona <site> --lat <lat> --lon <lon east> --nombre "<name>"` downloads only a 6 × 6 km window of the CTX (and HiRISE, if any) DTM and orthophoto from the USGS STAC catalog.
+
 ### How the crater detection is made more accurate
 
 The model is a YOLOv8n with one class (`Crater`) trained at 640 px. Run as-is on our images it missed the small craters and marked dune troughs and bright mesas. `crateres.py` adds:
@@ -162,6 +217,7 @@ The model is a YOLOv8n with one class (`Crater`) trained at 640 px. Run as-is on
 | Box fusion in metres across windows, scales and sources | One crater = one record, centre and size averaged by confidence |
 | Texture check (structure-tensor coherence around the crater) | Dune fields and ridges are strongly oriented; real cratered ground is not |
 | Relief check on the HiRISE DEM (2 m): regional slope removed, rim higher than the floor in at least 7 of 8 directions | A crater is a hole. Mesas, rocks, slopes and channels are rejected |
+| Second relief pass (`scripts/validar_crateres.py`): rim higher than the floor in 12 directions, round rim, centre lower than the surroundings; centre and diameter refitted on the DEM | Each crater ends up **confirmed**, **photo only** (too small or too shallow for a 2 m DEM, e.g. sand-filled craters) or **rejected** (mesas and slopes on the delta). Rejected craters are hidden by the confidence filter and can be reviewed in the explorer |
 
 The new site appears in the **Site** selector.
 
@@ -174,6 +230,11 @@ scripts/
   procesar.py        crops a site, computes slope and roughness, exports layers and HiRISE tiles
   crateres.py        detects craters with the YOLO model (best.pt) and writes crateres.json
   geologia.py        rasterizes the USGS geologic map into a colored layer
+  validar_crateres.py relief check of the YOLO craters (confirm / refit / reject)
+  aterrizaje.py      landing-safety map and suggested landing spots
+  evaluar_crateres.py precision / recall of the crater detector against hand labels
+  validar_ruta.js    compares our routes with Perseverance's real traverse (Node.js)
+  cortar_marte.py    cuts the global Viking mosaic into map tiles
   descargar_zona.py  searches the USGS STAC catalog for CTX/HiRISE DTMs around a point
   revisar_tif.py     prints the info of a GeoTIFF
   hacer_iconos.py    app icons
@@ -188,6 +249,10 @@ docs/                the web app (this folder is what GitHub Pages publishes)
   js/crateres.js     crater layer, craters on the route, "Select zone" tool
   js/explorador.js   crater explorer (detail map, list, filters, crater card)
   js/habitat3d.js    3D habitat model (3D table and visor)
+  js/marte.js        global Mars map and landing sites
+  js/aterrizaje.js   landing-safety layer and suggested sites
+  js/fases.js        5-phase mission flow (Mars, Land, Plan, Review, Execute)
+  etiquetar.html     tool to hand-label craters (ground truth)
   js/idioma.js       English / Spanish texts
   data/zonas/<site>/ processed data of each site
   sw.js              offline mode
@@ -225,3 +290,16 @@ We used Claude (Anthropic) as a coding and writing assistant: to help write and 
 - Frida Sofía Coronel Olvera, 2D map and interface
 - Josué Alexander Munguía Ramírez, 3D table and visor
 - Fer, science, points of interest and presentation
+
+## Science objectives
+
+The EVA starts from science, not from a random walk. `data/zonas/jezero/ciencia.json` defines three objectives and `poi.json` holds 9 real places Perseverance studied inside our 6 km zone. Each place says what to study, how (instrument), whether a sample is taken, the sol Perseverance was there and a NASA source link. Coordinates come from the rover position on that sol in `M20_traverse.json`.
+
+| Objective | Places |
+|---|---|
+| Search for signs of ancient life (delta) | Skinner Ridge, Wildcat Ridge (most abundant organics found by SHERLOC), Amalik, Belva crater rim |
+| Read the history of the crater floor | Octavia E. Butler Landing, Rochette (first cores), Brac, Issole |
+| Recover the Three Forks samples | Three Forks Sample Depot (first sample depot on another planet) |
+
+In the PLAN step the crew ticks objectives and presses "Add selected objectives to the route": stops are added nearest-first from the habitat. The REVIEW checklist shows how many objectives and targets the route covers.
+

@@ -22,7 +22,7 @@ let sim = null;             // estado de la simulacion
 let cabeza = { yaw: 0, pitch: -0.05 }; // a donde voltea el astronauta (relativo al camino)
 let chevrones = [], balizas = null;
 const reloj = new THREE.Timer();
-const activos = new Set(); // paneles del HUD abiertos
+const activos = new Set(["mapa"]); // paneles del HUD abiertos (el minimapa empieza abierto)
 
 // ================= Terreno =================
 // Coordenadas: x = metros al este desde el borde oeste; s = metros al sur desde el borde norte.
@@ -416,6 +416,17 @@ function actualizarHud(forzar) {
   const reserva = params.reserva / 100;
   $("hc-o2-barra").style.width = `${Math.max(0, (1 - usado) * 100)}%`;
   $("hc-o2-barra").style.background = 1 - usado < reserva ? "#ff5252" : 1 - usado < reserva + 0.15 ? "#f5c542" : "#3ddc84";
+  // anillo de oxigeno y telemetria (diseno nuevo)
+  const quedaPct = Math.max(0, (1 - usado) * 100);
+  const colorO2 = 1 - usado < reserva ? "#FF5A5F" : 1 - usado < reserva + 0.15 ? "#FFB547" : "#3DDC84";
+  $("hc-o2-anillo").style.background = `conic-gradient(${colorO2} ${quedaPct}%, #222B3B 0)`;
+  $("hc-o2-pct").textContent = `${quedaPct.toFixed(0)}%`;
+  $("hc-o2-resto").textContent = `${hm(Math.max(0, params.oxigeno - sim.t))} left`;
+  const minMet = Math.round(sim.t * 60);
+  $("hc-t-met").textContent = `T+${Math.floor(minMet / 60)}:${String(minMet % 60).padStart(2, "0")}`;
+  $("hc-t-dist").textContent = `${(p.d / 1000).toFixed(2)} km`;
+  $("hc-t-dosis").textContent = `${((sim.t / 24) * params.radiacion * (params.tormenta ? params.multTormenta : 1)).toFixed(3)} mSv`;
+  $("hc-t-regreso").textContent = hm(Math.max(0, ruta.total - sim.t));
 
   const dest = siguienteDestino(p.d);
   const relativo = ((rumbo(p, dest) - verHacia) + 540) % 360 - 180;
@@ -478,10 +489,10 @@ function dibujarMinimapa(p) {
   const c = $("hc-mini"), ctx = c.getContext("2d");
   const W = c.width, H = c.height;
   ctx.clearRect(0, 0, W, H);
-  ctx.fillStyle = "rgba(0,0,0,0.55)"; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = "rgba(11,15,23,0.6)"; ctx.fillRect(0, 0, W, H);
   const esc = Math.min(W / info.ancho_m, H / info.alto_m);
   const X = (x) => x * esc + (W - info.ancho_m * esc) / 2, Y = (s) => s * esc + (H - info.alto_m * esc) / 2;
-  ctx.strokeStyle = "#00e5ff"; ctx.lineWidth = 2; ctx.beginPath();
+  ctx.strokeStyle = "#4FD1E8"; ctx.lineWidth = 2; ctx.beginPath();
   ruta.x.forEach((x, i) => (i ? ctx.lineTo(X(x), Y(ruta.s[i])) : ctx.moveTo(X(x), Y(ruta.s[i]))));
   ctx.stroke();
   ctx.fillStyle = "#ffffff"; ctx.beginPath(); ctx.arc(X(p.x), Y(p.s), 4, 0, 7); ctx.fill();

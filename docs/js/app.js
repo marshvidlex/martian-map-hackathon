@@ -67,6 +67,7 @@ async function iniciar() {
     attributionControl: false,
   });
   mapa.fitBounds(limites);
+  mapa.zoomControl.setPosition("topright"); // en el diseno nuevo el zoom va a la derecha
 
   // --- Capas fijas ---
   const capas = {
@@ -130,10 +131,16 @@ async function iniciar() {
 
   // --- Eventos ---
   mapa.on("click", alTocarMapa);
+  // lectura de coordenadas, altura y pendiente bajo el cursor
   mapa.on("mousemove", (e) => {
+    const caja = document.getElementById("coordenadas");
+    const celda = mapaACelda(e.latlng);
+    if (celda === null) { caja.textContent = "Outside the map"; return; }
     const [lon, lat] = mapaALonlat(e.latlng);
-    document.getElementById("coordenadas").textContent =
-      `Cursor: ${lat.toFixed(4)} N, ${lon.toFixed(4)} E`;
+    const z = cuad.elevacion[celda], p = cuad.pendiente[celda];
+    caja.textContent = `${lat.toFixed(4)}° N · ${lon.toFixed(4)}° E` +
+      (z > -99999 ? `   ${Math.round(z).toLocaleString("en-US")} m` : "") +
+      (p >= 0 ? `   slope ${(p / 10).toFixed(1)}°` : "");
   });
   document.getElementById("btn-borrar").addEventListener("click", borrarMision);
   document.getElementById("btn-quitar").addEventListener("click", quitarUltima);
@@ -290,7 +297,7 @@ function calcular() {
   lineas.forEach((l) => l.remove());
   lineas = [];
   if (paradas.length < 2) {
-    document.getElementById("resultado").classList.add("oculto");
+    ocultarResultado();
     ultimaMision = null;
     actualizarHud();
     return;
@@ -303,7 +310,7 @@ function calcular() {
 
   if (m.error) {
     texto(m.error + " Remove the last stop or pick another point.");
-    document.getElementById("resultado").classList.add("oculto");
+    ocultarResultado();
     ultimaMision = null;
     actualizarHud();
     return;
@@ -313,7 +320,7 @@ function calcular() {
   m.tramos.forEach((t, k) => {
     const regreso = k === m.tramos.length - 1;
     lineas.push(L.polyline(t.camino.map(celdaAMapa), {
-      color: regreso ? "#b388ff" : "#00e5ff",
+      color: regreso ? "#9E8CFF" : "#4FD1E8",
       weight: 4,
       dashArray: regreso ? "6 8" : null,
     }).addTo(mapa));
@@ -333,10 +340,14 @@ const horas = (h) => {
 function mostrarPanel(m, params) {
   const poner = (id, valor) => (document.getElementById(id).textContent = valor);
   document.getElementById("resultado").classList.remove("oculto");
+  document.getElementById("sin-mision").classList.add("oculto");
 
   const v = document.getElementById("veredicto");
   v.textContent = m.go ? "GO" : "NO-GO";
-  v.className = m.go ? "go" : "nogo";
+  document.getElementById("tarjeta-veredicto").className = m.go ? "tarjeta-go" : "tarjeta-nogo";
+  const numParadas = m.tramos.length - 1;
+  poner("resumen-paradas", `${numParadas} STOP${numParadas === 1 ? "" : "S"} · ROUND TRIP`);
+  ponerChips(m.go ? "go" : "nogo", `${m.go ? "GO" : "NO-GO"} · ${horas(m.total)} · O₂ ${m.oxigenoPct.toFixed(0)}%`);
 
   const motivos = [];
   if (!m.okOxigeno) {
@@ -354,19 +365,59 @@ function mostrarPanel(m, params) {
 
   poner("r-distancia", `${m.distancia.toFixed(2)} km`);
   poner("r-total", horas(m.total));
-  poner("r-pendiente", `${m.pendienteMax.toFixed(1)} degrees`);
+  poner("r-pendiente", `${m.pendienteMax.toFixed(1)}°`);
   poner("r-subida", `${Math.round(m.subida)} m`);
-  poner("r-oxigeno", `${m.oxigenoPct.toFixed(0)} % of the suit`);
-  poner("r-radiacion", `${m.dosis.toFixed(3)} mSv`);
+  poner("r-oxigeno", `${m.oxigenoPct.toFixed(0)}%`);
+  poner("r-radiacion", `${m.dosis.toFixed(2)} mSv`);
+  // barras: oxigeno usado del traje y dosis contra el limite
+  const oxi = document.getElementById("b-oxigeno");
+  oxi.style.width = `${Math.min(100, m.oxigenoPct)}%`;
+  oxi.style.background = m.okOxigeno ? "#4FD1E8" : "#FF5A5F";
+  const dos = document.getElementById("b-dosis");
+  dos.style.width = `${Math.min(100, (m.dosis / params.limiteDosis) * 100)}%`;
+  dos.style.background = m.okDosis ? "#FFB547" : "#FF5A5F";
 
+  // linea de tiempo: habitat, cada parada con su hora de llegada, y el regreso
+  const llegadas = horariosMision(m, params.trabajo);
   const lista = document.getElementById("tramos");
-  lista.innerHTML = "";
+  let html = `<li><span class="punto habitat">H</span><span class="paso">Habitat · EVA start</span><span class="hora">T+0:00</span></li>`;
   m.tramos.forEach((t, k) => {
-    const desde = nombreParada(k);
-    const hasta = k === m.tramos.length - 1 ? "Habitat" : nombreParada(k + 1);
-    lista.insertAdjacentHTML("beforeend",
-      `<li>${desde} &rarr; ${hasta}: ${t.distancia.toFixed(2)} km, ${horas(t.tiempo)}</li>`);
+    const regreso = k === m.tramos.length - 1;
+    const detalle = `${t.distancia.toFixed(2)} km · ${horas(t.tiempo)} walk` + (regreso ? "" : ` · ${horas(params.trabajo)} work`);
+    html += regreso
+      ? `<li><span class="punto regreso">&#8617;</span><span class="paso">Return to habitat<small>${detalle}</small></span><span class="hora">${tMas(m.total)}</span></li>`
+      : `<li><span class="punto">${k + 1}</span><span class="paso">${nombreParada(k + 1)}<small>${detalle}</small></span><span class="hora">${tMas(llegadas[k + 1])}</span></li>`;
   });
+  lista.innerHTML = html;
+}
+
+// Hora de llegada (en horas desde la salida) a cada punto: [0] = habitat, [k] = parada k
+function horariosMision(m, trabajo) {
+  const llegadas = [0];
+  let t = 0;
+  m.tramos.slice(0, -1).forEach((tramo, k) => {
+    t += tramo.tiempo;
+    llegadas.push(t);
+    t += trabajo;
+  });
+  return llegadas;
+}
+const tMas = (h) => { const min = Math.round(h * 60); return `T+${Math.floor(min / 60)}:${String(min % 60).padStart(2, "0")}`; };
+
+// Chip de estado en la barra de arriba y en la Mesa 3D
+function ponerChips(clase, textoChip) {
+  for (const id of ["chip-estado", "estado3d"]) {
+    const c = document.getElementById(id);
+    if (!c) continue;
+    c.className = "chip" + (clase ? " " + clase : "");
+    c.textContent = textoChip;
+  }
+}
+
+function ocultarResultado() {
+  document.getElementById("resultado").classList.add("oculto");
+  document.getElementById("sin-mision").classList.remove("oculto");
+  ponerChips("", "NO MISSION");
 }
 
 // Grafica de altura contra distancia de toda la mision, con lineas en cada parada
@@ -389,19 +440,28 @@ function dibujarPerfil(m) {
   const X = (d) => margen + (d / base) * (W - margen - 6);
   const Y = (z) => H - 16 - ((z - zmin) / (zmax - zmin)) * (H - 26);
 
-  ctx.strokeStyle = "#555";
-  ctx.setLineDash([3, 3]);
+  // relleno suave debajo de la linea
+  ctx.fillStyle = "rgba(79, 209, 232, 0.14)";
+  ctx.beginPath();
+  ctx.moveTo(X(0), H - 16);
+  puntos.forEach((p) => ctx.lineTo(X(p.d), Y(p.z)));
+  ctx.lineTo(X(base), H - 16);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = "#2B3548";
+  ctx.setLineDash([3, 4]);
   cortes.slice(0, -1).forEach((d) => { ctx.beginPath(); ctx.moveTo(X(d), 4); ctx.lineTo(X(d), H - 16); ctx.stroke(); });
   ctx.setLineDash([]);
 
-  ctx.strokeStyle = "#00e5ff";
+  ctx.strokeStyle = "#4FD1E8";
   ctx.lineWidth = 2;
   ctx.beginPath();
   puntos.forEach((p, i) => (i ? ctx.lineTo(X(p.d), Y(p.z)) : ctx.moveTo(X(p.d), Y(p.z))));
   ctx.stroke();
 
-  ctx.fillStyle = "#aaa";
-  ctx.font = "10px sans-serif";
+  ctx.fillStyle = "#9AA4B6";
+  ctx.font = "10px 'IBM Plex Mono', monospace";
   ctx.fillText(`${Math.round(zmax)} m`, 2, 12);
   ctx.fillText(`${Math.round(zmin)} m`, 2, H - 18);
   ctx.fillText("0 km", margen, H - 4);
@@ -453,7 +513,10 @@ function actualizarHud() {
 
 // Solo se puede salir si la mision es GO: es la regla de seguridad antes de dejar la nave
 function aprobarMision() {
-  if (!ultimaMision) return;
+  if (!ultimaMision) {
+    texto("First plan a mission: place the <b>habitat</b> and at least one stop.");
+    return;
+  }
   if (!ultimaMision.go) {
     texto("Cannot approve: the mission is NO-GO. Check the reason in the result and adjust the stops.");
     document.getElementById("motivo").scrollIntoView({ behavior: "smooth" });
@@ -476,7 +539,7 @@ function borrarMision() {
   lineas.forEach((l) => l.remove());
   if (capaRegreso) capaRegreso.remove();
   marcadores = []; lineas = []; paradas = []; capaRegreso = null; ultimaMision = null;
-  document.getElementById("resultado").classList.add("oculto");
+  ocultarResultado();
   actualizarHud();
   texto("Tap the map to place the <b>habitat</b>.");
 }
@@ -495,3 +558,7 @@ iniciar().catch((err) => {
   console.error(err);
   alert("Error loading data. Open the page through a local server (python -m http.server).");
 });
+
+// Botones con data-click="id": hacen lo mismo que el boton con ese id
+document.querySelectorAll("[data-click]").forEach((b) =>
+  b.addEventListener("click", () => document.getElementById(b.dataset.click).click()));

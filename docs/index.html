@@ -4,157 +4,283 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Martian Map</title>
-  <meta name="theme-color" content="#1b1b1b">
+  <meta name="theme-color" content="#0B0F17">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icon-192.png">
+  <!-- Fuentes: si no hay internet se usan las del sistema -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
   <link rel="stylesheet" href="lib/leaflet/leaflet.css">
   <link rel="stylesheet" href="css/estilos.css">
 </head>
 <body>
-  <div id="mapa"></div>
 
-  <!-- Vista para el visor del casco: solo lo indispensable, letras grandes -->
+  <!-- ================= Barra superior ================= -->
+  <header id="barra">
+    <div class="marca-app">
+      <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="13" fill="none" stroke="#F26B3A" stroke-width="2"/><path d="M6 19 C11 13, 17 21, 24 11" fill="none" stroke="#4FD1E8" stroke-width="2" stroke-linecap="round"/><circle cx="24" cy="11" r="2.4" fill="#4FD1E8"/></svg>
+      <div>
+        <div class="marca-titulo">MARTIAN MAP</div>
+        <div class="marca-sub"><span id="nombre-zona">Jezero Crater</span> · MARSWALK PLANNER</div>
+      </div>
+    </div>
+    <nav class="modos" aria-label="Modes">
+      <button class="activo" aria-current="page">Plan</button>
+      <button id="btn-3d">3D table</button>
+      <button data-click="btn-aprobar">Visor</button>
+    </nav>
+    <div class="espacio"></div>
+    <div class="zona">
+      <label for="sel-zona">SITE</label>
+      <select id="sel-zona"></select>
+    </div>
+    <div id="chip-estado" class="chip">NO MISSION</div>
+  </header>
+
+  <!-- ================= Cuerpo: capas | mapa | mision ================= -->
+  <div id="cuerpo">
+
+    <!-- Capas -->
+    <aside id="rail" aria-label="Layers">
+      <section>
+        <h2>BASE MAP</h2>
+        <div class="capa">
+          <label><input type="checkbox" id="chk-foto" checked> CTX orbital photo</label>
+          <input type="range" id="op-foto" min="0" max="1" step="0.1" value="1" aria-label="Photo opacity">
+        </div>
+        <div class="capa">
+          <label><input type="checkbox" id="chk-elevacion"> Elevation</label>
+          <input type="range" id="op-elevacion" min="0" max="1" step="0.1" value="0.6" aria-label="Elevation opacity">
+        </div>
+      </section>
+      <section>
+        <h2>SAFETY LAYERS</h2>
+        <div class="capa">
+          <label><input type="checkbox" id="chk-pendiente"> Slope <span class="dato">red = blocked</span></label>
+          <input type="range" id="op-pendiente" min="0" max="1" step="0.1" value="0.6" aria-label="Slope opacity">
+        </div>
+        <div class="capa" id="bloque-rugosidad">
+          <label><input type="checkbox" id="chk-rugosidad"> HiRISE roughness</label>
+          <input type="range" id="op-rugosidad" min="0" max="1" step="0.1" value="0.8" aria-label="Roughness opacity">
+        </div>
+        <label class="opcion"><input type="checkbox" id="chk-regreso"> Walk-back zone</label>
+        <label class="opcion"><input type="checkbox" id="chk-tormenta"> Solar storm scenario</label>
+      </section>
+      <section>
+        <h2>SCIENCE LAYERS</h2>
+        <div id="capas-extra"></div>
+      </section>
+      <p class="nota fuentes">Data: USGS / NASA · CTX, HiRISE, SIM 3464, M20 traverse</p>
+    </aside>
+
+    <!-- Mapa con controles encima -->
+    <main id="zona-mapa">
+      <div id="mapa"></div>
+      <div class="flotante arriba-izq">
+        <span class="etiqueta">NEXT ACTION</span>
+        <p id="instruccion">Tap the map to place the <b>habitat</b>.</p>
+      </div>
+      <div class="flotante-botones abajo-izq">
+        <button id="btn-quitar" class="btn-sec">Undo last stop</button>
+        <button id="btn-borrar" class="btn-sec">Clear mission</button>
+      </div>
+      <div id="coordenadas" class="flotante abajo-der mono">Move over the map</div>
+    </main>
+
+    <!-- Mision -->
+    <aside id="panel" aria-label="Mission">
+      <section id="sin-mision" class="vacio">
+        <span class="etiqueta">MISSION STATUS</span>
+        <p class="vacio-titulo">No mission yet</p>
+        <ol>
+          <li>Tap the map to place the <b>habitat</b>.</li>
+          <li>Tap again to add <b>stops</b>.</li>
+          <li>Review the result and <b>approve</b>.</li>
+        </ol>
+      </section>
+
+      <div id="resultado" class="oculto">
+        <section id="tarjeta-veredicto" class="tarjeta-go">
+          <div class="fila-etiqueta">
+            <span class="etiqueta">MISSION STATUS</span>
+            <span id="resumen-paradas" class="mono pequeno"></span>
+          </div>
+          <div class="fila-veredicto">
+            <span id="veredicto">GO</span>
+            <span id="motivo"></span>
+          </div>
+        </section>
+
+        <section class="cifras">
+          <div class="cifra"><span class="etiqueta">DISTANCE</span><span id="r-distancia" class="valor"></span></div>
+          <div class="cifra"><span class="etiqueta">TOTAL TIME</span><span id="r-total" class="valor"></span></div>
+          <div class="cifra"><span class="etiqueta">OXYGEN</span><span id="r-oxigeno" class="valor"></span><span class="barra"><span id="b-oxigeno"></span></span></div>
+          <div class="cifra"><span class="etiqueta">RADIATION</span><span id="r-radiacion" class="valor"></span><span class="barra"><span id="b-dosis"></span></span></div>
+          <div class="cifra"><span class="etiqueta">MAX SLOPE</span><span id="r-pendiente" class="valor"></span></div>
+          <div class="cifra"><span class="etiqueta">TOTAL CLIMB</span><span id="r-subida" class="valor"></span></div>
+        </section>
+
+        <section>
+          <h2>TIMELINE</h2>
+          <ol id="tramos"></ol>
+        </section>
+
+        <section>
+          <h2>ELEVATION PROFILE</h2>
+          <canvas id="perfil" width="380" height="110"></canvas>
+        </section>
+
+        <div class="acciones">
+          <button id="btn-aprobar" class="btn-principal">APPROVE MISSION &amp; SUIT UP</button>
+          <button data-click="btn-3d" class="btn-sec">Review in 3D table</button>
+        </div>
+      </div>
+
+      <details>
+        <summary>Mission parameters (demo values)</summary>
+        <label>Max slope (degrees) <input type="number" id="p-pendiente" value="25"></label>
+        <label>Max roughness (m) <input type="number" id="p-rugosidad" value="1" step="0.1"></label>
+        <label>Speed on flat ground (km/h) <input type="number" id="p-velocidad" value="3" step="0.5"></label>
+        <label>Extra load (kg) <input type="number" id="p-carga" value="20" step="5"></label>
+        <label>Suit oxygen (hours) <input type="number" id="p-oxigeno" value="8"></label>
+        <label>Work time per stop (hours) <input type="number" id="p-trabajo" value="0.5" step="0.25"></label>
+        <label>Safety reserve (%) <input type="number" id="p-reserva" value="20"></label>
+        <label>Normal radiation (mSv per day) <input type="number" id="p-radiacion" value="0.67" step="0.01"></label>
+        <label>Solar storm multiplier <input type="number" id="p-mult-tormenta" value="50"></label>
+        <label>Dose limit per EVA (mSv) <input type="number" id="p-limite-dosis" value="1" step="0.1"></label>
+        <p class="nota">Demo values, not official NASA data.</p>
+      </details>
+    </aside>
+  </div>
+
+  <!-- Modo visor 2D viejo: se deja escondido porque app.js todavia lo usa -->
   <div id="hud">
     <div id="hud-veredicto">--</div>
     <div id="hud-siguiente">No mission</div>
     <div id="hud-datos"></div>
     <button id="btn-salir-casco">Exit</button>
   </div>
+  <button id="btn-casco" class="oculto">Visor mode</button>
 
-  <!-- Vista 3D: ocupa toda la pantalla cuando se abre -->
+  <!-- ================= Mesa 3D ================= -->
   <div id="vista3d">
     <div id="lienzo3d"></div>
-    <div id="barra3d">
-      <label>Layer <select id="sel-capa3d"></select></label>
-      <label title="Tip: tap a label to go there, double-click the terrain to zoom in">Go to <select id="sel-ir3d"></select></label>
-      <label>Relief <input type="range" id="rng-exagera" min="1" max="6" step="0.5" value="2.5">
-        <span id="txt-exagera">2.5x</span></label>
-      <button id="btn-recorrer">Fly the route</button>
-      <button id="btn-cerrar3d">Back to map</button>
-      <button id="btn-aprobar3d" class="aprobar-chico">Approve mission and go</button>
-    </div>
+
+    <header class="barra3d-arriba">
+      <span class="marca-titulo">MARTIAN MAP</span>
+      <nav class="modos" aria-label="Modes">
+        <button data-click="btn-cerrar3d">Plan</button>
+        <button class="activo" aria-current="page">3D table</button>
+        <button data-click="btn-aprobar3d">Visor</button>
+      </nav>
+      <span class="espacio"></span>
+      <span class="mono tenue">RELIEF <span id="txt-exagera">2.5x</span></span>
+    </header>
+
+    <section id="panel3d" class="tarjeta3d">
+      <h2>DRAPE LAYER</h2>
+      <div id="capas3d" class="rejilla2"></div>
+      <h2>GO TO</h2>
+      <div id="lugares3d" class="lista-lugares"></div>
+      <label class="rango3d">RELIEF
+        <input type="range" id="rng-exagera" min="1" max="6" step="0.5" value="2.5">
+      </label>
+      <p class="nota">Tap a marker to fly to it. Double-click the ground to zoom in.</p>
+    </section>
+
+    <section id="ficha3d" class="tarjeta3d oculto">
+      <div class="ficha-titulo">
+        <span id="ficha-num" class="insignia">1</span>
+        <h3 id="ficha-nombre"></h3>
+      </div>
+      <div id="ficha-unidad" class="ficha-unidad"></div>
+      <div class="ficha-datos mono">
+        <span class="tenue">Lat / Lon</span><span id="ficha-coord"></span>
+        <span class="tenue">Elevation</span><span id="ficha-elev"></span>
+        <span class="tenue">Arrival</span><span id="ficha-llegada"></span>
+        <span class="tenue">Slope here</span><span id="ficha-pend"></span>
+      </div>
+      <p id="ficha-texto"></p>
+      <div class="fila-botones">
+        <button id="ficha-ant" class="btn-sec">Previous</button>
+        <button id="ficha-sig" class="btn-sec">Next stop</button>
+      </div>
+    </section>
+
+    <section id="leyenda3d" class="tarjeta3d">
+      <h2>LEGEND</h2>
+      <div><span class="muestra ida"></span>Outbound route</div>
+      <div><span class="muestra regreso"></span>Return route</div>
+      <div id="leyenda-rover"><span class="muestra rover"></span>Perseverance real traverse</div>
+      <div class="tenue">Geology: USGS SIM 3464 (Sun &amp; Stack, 2020)</div>
+    </section>
+
+    <footer class="barra3d-abajo">
+      <button id="btn-cerrar3d" class="btn-sec">&larr; Back to plan</button>
+      <button id="btn-recorrer" class="btn-sec">Fly the route</button>
+      <span class="espacio"></span>
+      <span id="estado3d" class="chip">NO MISSION</span>
+      <button id="btn-aprobar3d" class="btn-principal">APPROVE &amp; SUIT UP</button>
+    </footer>
   </div>
 
-  <!-- Casco: vista en primera persona durante la caminata -->
+  <!-- ================= Casco: primera persona ================= -->
   <div id="casco">
     <div id="lienzo-casco"></div>
     <div id="hc-visor"></div>
+
     <div id="hc-arriba">
       <div id="hc-rumbo">N · 0°</div>
-      <div id="hc-o2"><div id="hc-o2-barra"></div></div>
+      <div id="hc-siguiente"><span id="hc-flecha">&#9650;</span> <span id="hc-destino"></span></div>
     </div>
-    <div id="hc-siguiente"><span id="hc-flecha">&#9650;</span> <span id="hc-destino"></span></div>
+
+    <section id="hc-o2-tarjeta" class="hc-caja">
+      <div id="hc-o2-anillo"><div class="hueco"></div></div>
+      <div>
+        <div class="hc-etiqueta">SUIT O₂</div>
+        <div id="hc-o2-pct" class="hc-grande">100%</div>
+        <div id="hc-o2-resto" class="hc-tenue"></div>
+      </div>
+      <div id="hc-o2" class="oculto"><div id="hc-o2-barra"></div></div>
+    </section>
+
+    <section id="hc-tele" class="hc-caja">
+      <div><span>MET</span><span id="hc-t-met">T+0:00</span></div>
+      <div><span>WALKED</span><span id="hc-t-dist">0.00 km</span></div>
+      <div><span>DOSE</span><span id="hc-t-dosis">0.000 mSv</span></div>
+      <div><span>BACK IN</span><span id="hc-t-regreso">--</span></div>
+    </section>
+
+    <div id="hc-alerta" role="status"></div>
+
     <div id="hc-iconos">
-      <button data-panel="oxigeno">O2</button>
-      <button data-panel="distancia">Dist</button>
-      <button data-panel="tiempo">Time</button>
-      <button data-panel="terreno">Terrain</button>
-      <button data-panel="dosis">Dose</button>
-      <button data-panel="parada">Stop</button>
-      <button data-panel="mapa">Map</button>
+      <button data-panel="oxigeno">O₂</button>
+      <button data-panel="distancia">DIST</button>
+      <button data-panel="tiempo">TIME</button>
+      <button data-panel="terreno">TERRAIN</button>
+      <button data-panel="dosis">DOSE</button>
+      <button data-panel="parada">STOP</button>
+      <button data-panel="mapa" class="activo">MAP</button>
     </div>
     <div id="hc-paneles"></div>
-    <canvas id="hc-mini" class="oculto" width="180" height="180"></canvas>
-    <div id="hc-alerta"></div>
+    <canvas id="hc-mini" width="220" height="160"></canvas>
+
     <div id="hc-controles">
       <button id="hc-pausa">Pause</button>
-      <span id="hc-velocidad">
-        <button data-x="1">x1</button><button data-x="10">x10</button><button data-x="60">x60</button><button data-x="300">x300</button>
+      <span id="hc-velocidad" role="group" aria-label="Simulation speed">
+        <button data-x="1">×1</button><button data-x="10">×10</button><button data-x="60">×60</button><button data-x="300">×300</button>
       </span>
       <button id="hc-frente">Look ahead</button>
       <button id="hc-giro">Gyroscope</button>
-      <button id="hc-salir">Back to the ship</button>
+      <button id="hc-salir" class="hc-abortar">Abort · back to the ship</button>
     </div>
+
     <div id="hc-resumen" class="oculto">
       <h2>Walk complete</h2>
       <div id="hc-resumen-datos"></div>
       <button id="hc-volver">Back to the ship</button>
     </div>
   </div>
-
-  <aside id="panel">
-    <h1>Martian Map</h1>
-    <p class="sub"><span id="nombre-zona">Jezero Crater</span> &middot; Marswalk planner</p>
-
-    <div class="zona">
-      <label for="sel-zona">Site</label>
-      <select id="sel-zona"></select>
-    </div>
-
-    <section>
-      <h2>Layers</h2>
-      <div class="capa">
-        <label><input type="checkbox" id="chk-foto" checked> Photo (CTX)</label>
-        <input type="range" id="op-foto" min="0" max="1" step="0.1" value="1">
-      </div>
-      <div class="capa">
-        <label><input type="checkbox" id="chk-elevacion"> Elevation</label>
-        <input type="range" id="op-elevacion" min="0" max="1" step="0.1" value="0.6">
-      </div>
-      <div class="capa">
-        <label><input type="checkbox" id="chk-pendiente"> Slope (red = blocked)</label>
-        <input type="range" id="op-pendiente" min="0" max="1" step="0.1" value="0.6">
-      </div>
-      <div class="capa" id="bloque-rugosidad">
-        <label><input type="checkbox" id="chk-rugosidad"> HiRISE roughness (rocks, ledges)</label>
-        <input type="range" id="op-rugosidad" min="0" max="1" step="0.1" value="0.8">
-      </div>
-      <div id="capas-extra"></div>
-    </section>
-
-    <section>
-      <h2>Mission</h2>
-      <p id="instruccion">Tap the map to place the <b>habitat</b>.</p>
-      <div class="botones">
-        <button id="btn-quitar">Remove last stop</button>
-        <button id="btn-borrar">Clear mission</button>
-        <button id="btn-casco">Visor mode</button>
-        <button id="btn-3d">3D table</button>
-      </div>
-    </section>
-
-    <section>
-      <h2>Safety</h2>
-      <label class="opcion"><input type="checkbox" id="chk-regreso"> Walk-back zone (if the rover fails)</label>
-      <label class="opcion"><input type="checkbox" id="chk-tormenta"> Simulate solar storm</label>
-    </section>
-
-    <section id="resultado" class="oculto">
-      <h2>Result</h2>
-      <div id="veredicto"></div>
-      <p id="motivo"></p>
-      <table>
-        <tr><td>Total distance</td><td id="r-distancia"></td></tr>
-        <tr><td>Total time (with work)</td><td id="r-total"></td></tr>
-        <tr><td>Max slope</td><td id="r-pendiente"></td></tr>
-        <tr><td>Total climb</td><td id="r-subida"></td></tr>
-        <tr><td>Oxygen used</td><td id="r-oxigeno"></td></tr>
-        <tr><td>Radiation dose</td><td id="r-radiacion"></td></tr>
-      </table>
-      <h2>Legs</h2>
-      <ol id="tramos"></ol>
-      <h2>Elevation profile</h2>
-      <canvas id="perfil" width="290" height="130"></canvas>
-      <button id="btn-aprobar" class="aprobar">Approve mission and go</button>
-    </section>
-
-    <details>
-      <summary>Demo parameters</summary>
-      <label>Max slope (degrees) <input type="number" id="p-pendiente" value="25"></label>
-      <label>Max roughness (m) <input type="number" id="p-rugosidad" value="1" step="0.1"></label>
-      <label>Speed on flat ground (km/h) <input type="number" id="p-velocidad" value="3" step="0.5"></label>
-      <label>Extra load (kg) <input type="number" id="p-carga" value="20" step="5"></label>
-      <label>Suit oxygen (hours) <input type="number" id="p-oxigeno" value="8"></label>
-      <label>Work time per stop (hours) <input type="number" id="p-trabajo" value="0.5" step="0.25"></label>
-      <label>Safety reserve (%) <input type="number" id="p-reserva" value="20"></label>
-      <label>Normal radiation (mSv per day) <input type="number" id="p-radiacion" value="0.67" step="0.01"></label>
-      <label>Solar storm multiplier <input type="number" id="p-mult-tormenta" value="50"></label>
-      <label>Dose limit per EVA (mSv) <input type="number" id="p-limite-dosis" value="1" step="0.1"></label>
-      <p class="nota">Demo values, not official NASA data.</p>
-    </details>
-
-    <p id="coordenadas" class="nota"></p>
-  </aside>
 
   <script src="lib/leaflet/leaflet.js"></script>
   <script src="js/ruta.js"></script>

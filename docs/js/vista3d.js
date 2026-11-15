@@ -207,7 +207,8 @@ function dibujarMision() {
     const s = letrero(k === 0 ? "H" : String(k), k === 0 ? "#e8794a" : "#00e5ff", 160);
     s.position.copy(celdaA3D(c, 200));
     s.userData.lugar = lugares.length; // al tocar el letrero, la camara va a este punto
-    lugares.push({ nombre: k === 0 ? "Habitat" : `${k}. ${nombreParada(k)}`, pos: celdaA3D(c, 0) });
+    lugares.push({ nombre: k === 0 ? "Habitat" : `${k} · ${nombreParada(k)}`, pos: celdaA3D(c, 0),
+      tipo: k === 0 ? "habitat" : "parada", k, celda: c, titulo: k === 0 ? "Habitat" : nombreParada(k) });
     grupoMision.add(s);
   });
 
@@ -216,7 +217,8 @@ function dibujarMision() {
     const s = letrero(p.nombre, "#ffd23f", 110);
     s.position.copy(a3D(lat, lng, 300));
     s.userData.lugar = lugares.length;
-    lugares.push({ nombre: p.nombre, pos: a3D(lat, lng, 0) });
+    lugares.push({ nombre: p.nombre, pos: a3D(lat, lng, 0), tipo: "poi", titulo: p.nombre,
+      celda: mapaACelda({ lat, lng }), poi: p });
     grupoMision.add(s);
     const poste = new THREE.Mesh(
       new THREE.CylinderGeometry(6, 6, 260, 6),
@@ -229,9 +231,12 @@ function dibujarMision() {
 
 // Selector "Go to": vista completa + habitat, paradas y puntos de interes
 function llenarSelectorLugares() {
-  const sel = document.getElementById("sel-ir3d");
-  sel.innerHTML = `<option value="-1">Whole site</option>` +
-    lugares.map((l, i) => `<option value="${i}">${l.nombre}</option>`).join("");
+  const caja = document.getElementById("lugares3d");
+  const color = (l) => (l.tipo === "habitat" ? "#F26B3A" : l.tipo === "poi" ? "#FFD23F" : "#4FD1E8");
+  caja.innerHTML = `<button data-i="-1"><span class="bolita"></span>Whole site</button>` +
+    lugares.map((l, i) => `<button data-i="${i}"><span class="bolita" style="background:${color(l)}"></span>${l.nombre}</button>`).join("");
+  caja.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => irALugar(parseInt(b.dataset.i, 10))));
+  document.getElementById("ficha3d").classList.add("oculto");
 }
 
 // ---------- Acercarse a un punto ----------
@@ -258,6 +263,8 @@ function pasoVuelo() {
 }
 
 function irALugar(i) {
+  document.querySelectorAll("#lugares3d button").forEach((b) => b.classList.toggle("activo", b.dataset.i === String(i)));
+  mostrarFicha(i);
   if (i < 0) {
     const v = vistaCompleta();
     iniciarVuelo(v.camara, v.objetivo);
@@ -286,7 +293,6 @@ function conectarClics() {
     const tocado = rayo.intersectObjects(letreros)[0];
     if (tocado) {
       const i = tocado.object.userData.lugar;
-      document.getElementById("sel-ir3d").value = String(i);
       irALugar(i);
     }
   });
@@ -295,6 +301,77 @@ function conectarClics() {
     const golpe = rayo.intersectObject(terreno)[0];
     if (golpe) volarA(golpe.point, DIST_CERCA * 0.7);
   });
+}
+
+// ---------- Ficha del lugar elegido ----------
+let lugarActual = -1;
+function mostrarFicha(i) {
+  lugarActual = i;
+  const ficha = document.getElementById("ficha3d");
+  const l = lugares[i];
+  if (!l) { ficha.classList.add("oculto"); return; }
+  ficha.classList.remove("oculto");
+  const poner = (id, v) => (document.getElementById(id).textContent = v);
+
+  const num = document.getElementById("ficha-num");
+  num.textContent = l.tipo === "habitat" ? "H" : l.tipo === "poi" ? "★" : String(l.k);
+  num.className = "insignia" + (l.tipo === "habitat" ? " habitat" : l.tipo === "poi" ? " poi" : "");
+  poner("ficha-nombre", l.titulo);
+
+  // coordenadas, altura y pendiente desde la cuadricula
+  let lon, lat;
+  if (l.poi) { lon = l.poi.lon; lat = l.poi.lat; }
+  else { const [la, ln] = celdaAMapa(l.celda); [lon, lat] = mapaALonlat({ lat: la, lng: ln }); }
+  poner("ficha-coord", `${lat.toFixed(4)} N · ${lon.toFixed(4)} E`);
+  const z = l.celda !== null && l.celda !== undefined ? cuad.elevacion[l.celda] : -99999;
+  const p = l.celda !== null && l.celda !== undefined ? cuad.pendiente[l.celda] : -1;
+  poner("ficha-elev", z > -99999 ? `${Math.round(z).toLocaleString("en-US")} m` : "--");
+  poner("ficha-pend", p >= 0 ? `${(p / 10).toFixed(1)}°` : "--");
+
+  // hora de llegada (solo paradas de la mision)
+  let llegada = "--";
+  if (l.tipo === "habitat") llegada = "T+0:00";
+  else if (l.tipo === "parada" && ultimaMision && typeof horariosMision === "function") {
+    const h = horariosMision(ultimaMision, leerParametros().trabajo)[l.k];
+    if (h !== undefined) llegada = tMas(h);
+  }
+  poner("ficha-llegada", llegada);
+
+  // unidad geologica en ese punto (si la zona tiene la capa)
+  const unidad = unidadGeologica(lon, lat);
+  const caja = document.getElementById("ficha-unidad");
+  caja.innerHTML = unidad ? `<span style="background:${unidad.color}"></span>${unidad.nombre}${unidad.simbolo ? ` (${unidad.simbolo})` : ""}` : "";
+
+  poner("ficha-texto", l.poi && l.poi.que_estudiar ? l.poi.que_estudiar : "");
+}
+
+// Lee el color de geologia.png en ese punto y lo compara con la leyenda
+let imgGeologia = null;
+async function prepararGeologia() {
+  if (imgGeologia || !info.geologia) return;
+  try {
+    const img = await cargarImagen(window.DATOS + "geologia.png");
+    const c = document.createElement("canvas");
+    c.width = img.width; c.height = img.height;
+    c.getContext("2d").drawImage(img, 0, 0);
+    imgGeologia = c.getContext("2d");
+    imgGeologia.ancho = img.width; imgGeologia.alto = img.height;
+  } catch { imgGeologia = null; }
+}
+function unidadGeologica(lon, lat) {
+  if (!imgGeologia || !info.geologia) return null;
+  const x = Math.floor(((lon - info.oeste) / (info.este - info.oeste)) * imgGeologia.ancho);
+  const y = Math.floor(((info.norte - lat) / (info.norte - info.sur)) * imgGeologia.alto);
+  if (x < 0 || y < 0 || x >= imgGeologia.ancho || y >= imgGeologia.alto) return null;
+  const [r, g, b, a] = imgGeologia.getImageData(x, y, 1, 1).data;
+  if (a < 10) return null;
+  let mejor = null, dist = Infinity;
+  for (const u of info.geologia) {
+    const ur = parseInt(u.color.slice(1, 3), 16), ug = parseInt(u.color.slice(3, 5), 16), ub = parseInt(u.color.slice(5, 7), 16);
+    const d = (r - ur) ** 2 + (g - ug) ** 2 + (b - ub) ** 2;
+    if (d < dist) { dist = d; mejor = u; }
+  }
+  return mejor;
 }
 
 // ---------- Recorrer la ruta como dron ----------
@@ -371,8 +448,10 @@ async function abrir3D() {
   }
   ajustarTamano();
   encuadrar();
+  await prepararGeologia();
   dibujarMision();
   llenarSelectorLugares();
+  document.getElementById("leyenda-rover").classList.toggle("oculto", !(window.recorridoRover || []).length);
   reloj.reset();
   renderer.setAnimationLoop(() => {
     reloj.update();
@@ -392,17 +471,21 @@ function cerrar3D() {
 }
 
 function llenarSelectorCapas() {
-  const sel = document.getElementById("sel-capa3d");
+  const caja = document.getElementById("capas3d");
   const opciones = [["foto", "Photo"], ["elevacion", "Elevation"], ["pendiente", "Slope"]];
   if (info.tiene_rugosidad) opciones.push(["rugosidad", "Roughness"]);
-  for (const e of info.capas_extra || []) opciones.push([e.nombre, e.etiqueta]);
-  sel.innerHTML = opciones.map(([v, t]) => `<option value="${v}">${t}</option>`).join("");
+  for (const e of info.capas_extra || []) opciones.push([e.nombre, e.nombre === "geologia" ? "Geology" : e.etiqueta]);
+  caja.innerHTML = opciones.map(([v, t]) => `<button data-capa="${v}">${t}</button>`).join("");
+  caja.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
+    caja.querySelectorAll("button").forEach((x) => x.classList.toggle("activo", x === b));
+    ponerTextura(b.dataset.capa);
+  }));
+  caja.querySelector('[data-capa="foto"]').classList.add("activo");
 }
 
 // ---------- Botones ----------
 document.getElementById("btn-3d").addEventListener("click", abrir3D);
 document.getElementById("btn-cerrar3d").addEventListener("click", cerrar3D);
-document.getElementById("sel-capa3d").addEventListener("change", (e) => ponerTextura(e.target.value));
 document.getElementById("rng-exagera").addEventListener("input", (e) => {
   exageracion = parseFloat(e.target.value);
   document.getElementById("txt-exagera").textContent = exageracion + "x";
@@ -419,4 +502,10 @@ document.getElementById("btn-aprobar3d").addEventListener("click", () => {
 document.getElementById("btn-recorrer").addEventListener("click", () =>
   recorrido ? detenerRecorrido() : iniciarRecorrido()
 );
-document.getElementById("sel-ir3d").addEventListener("change", (e) => irALugar(parseInt(e.target.value, 10)));
+// Anterior / siguiente en la ficha
+document.getElementById("ficha-ant").addEventListener("click", () => {
+  if (lugares.length) irALugar((lugarActual - 1 + lugares.length) % lugares.length);
+});
+document.getElementById("ficha-sig").addEventListener("click", () => {
+  if (lugares.length) irALugar((lugarActual + 1) % lugares.length);
+});

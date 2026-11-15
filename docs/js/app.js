@@ -73,8 +73,12 @@ async function iniciar() {
   mapa.zoomControl.setPosition("topright"); // en el diseno nuevo el zoom va a la derecha
 
   // --- Capas fijas ---
+  // La foto va en su propio panel, abajo de todo, para que las fotos HiRISE queden encima de ella
+  // pero debajo de las capas de pendiente, elevacion, etc.
+  mapa.createPane("base").style.zIndex = 380;
+  mapa.createPane("hirise").style.zIndex = 390;
   const capas = {
-    foto: L.imageOverlay(DATOS + "foto.png", limites),
+    foto: L.imageOverlay(DATOS + "foto.png", limites, { pane: "base" }),
     elevacion: L.imageOverlay(DATOS + "elevacion.png", limites),
     // la capa de pendiente se pinta aqui con el limite actual, asi el rojo siempre coincide con lo bloqueado
     pendiente: L.imageOverlay(pintarPendiente(LIMITE_PENDIENTE), limites, { className: "pixelada" }),
@@ -114,6 +118,9 @@ async function iniciar() {
     chk.addEventListener("change", () => (chk.checked ? capa.addTo(mapa) : capa.remove()));
     op.addEventListener("input", () => capa.setOpacity(op.value));
   }
+
+  // Al hacer zoom se cambia la foto CTX (6 m/pixel) por los mosaicos HiRISE (50 cm/pixel)
+  await prepararFotoHirise(capas.foto);
 
   // Valores por defecto del panel
   document.getElementById("p-pendiente").value = LIMITE_PENDIENTE;
@@ -170,6 +177,55 @@ async function iniciar() {
   );
 }
 
+// ---------- Foto HiRISE en el mapa 2D ----------
+// Son las mismas fotos que usa el casco (hirise/f_i_j.jpg, 250 m por lado, ~50 cm por pixel).
+// Solo se cargan las que se ven en pantalla y solo de cerca; de lejos basta la foto CTX.
+const ZOOM_HIRISE = -1.5; // a partir de este zoom la foto CTX ya se ve pixeleada
+
+async function prepararFotoHirise(capaFoto) {
+  let ind = null;
+  try {
+    const r = await fetch(DATOS + "hirise/indice.json");
+    if (r.ok) ind = await r.json();
+  } catch { ind = null; }
+  if (!ind || !(ind.fotos || []).length) return; // zona sin HiRISE: queda solo CTX
+
+  const T = ind.tesela_m, o = ind.origen_m;
+  const conFoto = new Set(ind.fotos);
+  const puestas = new Map(); // "i_j" -> imageOverlay
+  const chk = document.getElementById("chk-foto"), op = document.getElementById("op-foto");
+
+  function actualizar() {
+    const activa = chk.checked && mapa.getZoom() >= ZOOM_HIRISE;
+    const vista = mapa.getBounds().pad(0.3); // un poco de margen para que no se vean huecos al mover
+    const quedan = new Set();
+    if (activa) {
+      // mosaicos que tocan la vista (x = este, s = sur desde el borde norte)
+      const i0 = Math.max(0, Math.floor((vista.getWest() - o) / T)), i1 = Math.min(ind.nx - 1, Math.floor((vista.getEast() - o) / T));
+      const j0 = Math.max(0, Math.floor((info.alto_m - vista.getNorth() - o) / T)), j1 = Math.min(ind.ny - 1, Math.floor((info.alto_m - vista.getSouth() - o) / T));
+      for (let j = j0; j <= j1; j++) {
+        for (let i = i0; i <= i1; i++) {
+          const clave = `${i}_${j}`;
+          if (!conFoto.has(clave)) continue;
+          quedan.add(clave);
+          if (puestas.has(clave)) continue;
+          const norte = info.alto_m - (j * T + o), oeste = i * T + o;
+          puestas.set(clave, L.imageOverlay(`${DATOS}hirise/f_${clave}.jpg`, [[norte - T, oeste], [norte, oeste + T]],
+            { pane: "hirise", opacity: op.value, interactive: false, className: "foto-hirise" }).addTo(mapa));
+        }
+      }
+    }
+    for (const [clave, capa] of puestas) {
+      if (!quedan.has(clave)) { capa.remove(); puestas.delete(clave); }
+    }
+  }
+
+  mapa.on("moveend zoomend", actualizar);
+  chk.addEventListener("change", actualizar);
+  op.addEventListener("input", () => puestas.forEach((c) => c.setOpacity(op.value)));
+  actualizar();
+}
+
 // ---------- Capa de pendiente ----------
 // Colores: de morado (plano) a amarillo (cerca del limite); rojo = pasa el limite o sin datos
 function pintarPendiente(limite) {
@@ -213,6 +269,7 @@ async function cargarRecorridoRover() {
   const chk = document.getElementById("chk-rover");
   capa.addTo(mapa);
   chk.addEventListener("change", () => (chk.checked ? capa.addTo(mapa) : capa.remove()));
+  if (window.iniciarReplay) iniciarReplay(geo); // boton "Replay Perseverance mission" (replay.js)
 }
 
 // Se queda solo con los pedazos del recorrido que caen dentro de la zona

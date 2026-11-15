@@ -11,6 +11,14 @@ const OJOS = 1.7;        // m sobre el suelo
 const BAJAR_CTX = 3;     // el terreno lejano va 3 m abajo para que HiRISE quede encima
 const ZANCADA = 0.75;    // m por paso
 const RADIO_TESELAS = 1; // cuantos mosaicos alrededor se cargan (1 = 3x3, unos 750 m con detalle)
+// Modo rover (repetir la mision de Perseverance): camara a la altura de Mastcam-Z
+const OJOS_ROVER = 2.0;     // m: Mastcam-Z va en el mastil a unos 2 m
+const VEL_ROVER = 0.12;     // km/h: velocidad tipica de manejo con AutoNav
+const VEL_X_ROVER = [100, 500, 2000, 5000]; // botones de velocidad en modo rover
+const VEL_X_NORMAL = [1, 10, 60, 300];
+// Aterrizaje de Perseverance (sol 0): 18 feb 2021, 20:55 UTC. Un sol dura 88 775.244 s.
+const ATERRIZAJE = Date.UTC(2021, 1, 18, 20, 55);
+const SEG_POR_SOL = 88775.244;
 
 let renderer, escena, camara;
 let terrenoCTX, texFoto, zref = 0;
@@ -181,8 +189,34 @@ function armarRuta(mision, params, nombres, paradas) {
     return { x: lng, s: info.alto_m - lat };
   });
   destinos.push({ x: x[0], s: s[0] }); // al final se regresa al habitat
-  return { x, s, d, t, parada, total: tiempo, largo: dist, nombres, destinos };
+  // ojo: aqui "t" es la lista de tiempos, no la funcion de traduccion; nombres[0] ya es "Habitat"
+  const balizas = [{ ...destinos[destinos.length - 1], nombre: nombres[0], color: "#e8794a" }];
+  destinos.slice(0, -1).forEach((p, k) => balizas.push({ ...p, nombre: nombres[k + 1], color: "#00e5ff" }));
+  return { x, s, d, t, parada, total: tiempo, largo: dist, nombres, destinos, balizas };
 }
+
+// Ruta real de Perseverance (replay.js): el tiempo sale de la distancia a la velocidad del rover
+function armarRutaRover(rv) {
+  const pts = rv.puntos;
+  const ruta = {
+    rover: true,
+    x: pts.map((p) => p.x), s: pts.map((p) => p.s), d: pts.map((p) => p.d),
+    t: pts.map((p) => p.d / 1000 / VEL_ROVER), sol: pts.map((p) => p.sol),
+    parada: pts.map(() => -1), nombres: [], solFinal: rv.solFinal, kmMision: rv.kmMision,
+  };
+  ruta.largo = ruta.d[ruta.d.length - 1];
+  ruta.total = ruta.t[ruta.t.length - 1];
+  const ini = pts[0], fin = pts[pts.length - 1];
+  ruta.destinos = [{ x: fin.x, s: fin.s }];
+  ruta.balizas = [
+    { x: ini.x, s: ini.s, nombre: t("rv_aterrizaje"), color: "#e8794a" },
+    { x: fin.x, s: fin.s, nombre: t("rv_destino", { sol: fin.sol }), color: "#00e5ff" },
+  ];
+  return ruta;
+}
+
+const fechaTierra = (sol) => new Date(ATERRIZAJE + sol * SEG_POR_SOL * 1000)
+  .toLocaleDateString(IDIOMA === "es" ? "es-MX" : "en-US", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" });
 
 // Busqueda binaria: indice del ultimo punto con valor <= v
 function buscar(arr, v) {
@@ -276,9 +310,7 @@ function letrero(texto, color) {
 // Balizas de luz en el habitat y las paradas, para verlas de lejos
 function crearBalizas() {
   balizas = new THREE.Group();
-  const puntos = [{ ...ruta.destinos[ruta.destinos.length - 1], nombre: t("habitat"), color: "#e8794a" }];
-  ruta.destinos.slice(0, -1).forEach((p, k) => puntos.push({ ...p, nombre: ruta.nombres[k + 1], color: "#00e5ff" }));
-  for (const p of puntos) {
+  for (const p of ruta.balizas) {
     const base = alturaCTX(p.x, p.s) - zref - BAJAR_CTX;
     const columna = new THREE.Mesh(
       new THREE.CylinderGeometry(0.5, 0.5, 60, 8),
@@ -392,6 +424,10 @@ function alternarPanel(nombre) {
 }
 
 function siguienteDestino(d) {
+  if (ruta.rover) {
+    const fin = ruta.destinos[0];
+    return { k: 0, ...fin, dRestante: ruta.largo - d, nombre: ruta.balizas[1].nombre };
+  }
   // el destino al que va ahora: el primero cuya distancia en la ruta aun no se alcanza
   for (let k = 0; k < ruta.destinos.length; k++) {
     const i = ruta.parada.indexOf(k + 1);
@@ -411,6 +447,8 @@ function actualizarHud(forzar) {
   const yawCamino = sim.rumboCamino;
   const verHacia = ((yawCamino - THREE.MathUtils.radToDeg(cabeza.yaw)) % 360 + 360) % 360;
   $("hc-rumbo").textContent = `${puntoCardinal(verHacia)} · ${Math.round(verHacia)}°`;
+
+  if (ruta.rover) return hudRover(p, verHacia);
 
   const usado = sim.t / params.oxigeno;
   const reserva = params.reserva / 100;
@@ -465,6 +503,32 @@ function actualizarHud(forzar) {
   }
 }
 
+// HUD del modo rover: sol, fecha en la Tierra, distancia y lo que falta
+function hudRover(p, verHacia) {
+  const sol = ruta.sol[p.k];
+  $("hc-t-met").textContent = String(sol);
+  $("hc-t-dist").textContent = `${(p.d / 1000).toFixed(2)} km`;
+  $("hc-t-dosis").textContent = fechaTierra(sol);
+  $("hc-t-regreso").textContent = `${((ruta.largo - p.d) / 1000).toFixed(2)} km`;
+
+  const dest = siguienteDestino(p.d);
+  const relativo = ((rumbo(p, dest) - verHacia) + 540) % 360 - 180;
+  $("hc-flecha").style.transform = `rotate(${relativo}deg)`;
+  $("hc-destino").textContent = `${dest.nombre} · ${dest.dRestante >= 1000 ? (dest.dRestante / 1000).toFixed(2) + " km" : Math.round(dest.dRestante) + " m"}`;
+
+  const q = posicionPorDistancia(p.d + 5);
+  const zAqui = alturaReal(p.x, p.s), zAdelante = alturaReal(q.x, q.s);
+  const pend = Math.atan2(zAdelante - zAqui, 5) * 180 / Math.PI;
+  const textos = {
+    distancia: `<b>${t("rv_recorrido")}</b> ${(p.d / 1000).toFixed(2)} km<br><b>${t("c_falta")}</b> ${((ruta.largo - p.d) / 1000).toFixed(2)} km`,
+    tiempo: `<b>SOL</b> ${sol}<br><b>${t("rv_fecha")}</b> ${fechaTierra(sol)}`,
+    terreno: `<b>${t("c_altitud")}</b> ${Math.round(zAqui)} m<br><b>${t("c_pendiente")}</b> ${pend >= 0 ? "+" : ""}${pend.toFixed(0)}° ${pend > 1 ? t("subiendo") : pend < -1 ? t("bajando") : t("plano")}`,
+  };
+  $("hc-paneles").innerHTML = [...activos].filter((n) => textos[n]).map((n) => `<div class="hc-panel">${textos[n]}</div>`).join("");
+  if (activos.has("mapa")) dibujarMinimapa(p);
+  if (performance.now() > alertaHasta) $("hc-alerta").className = "";
+}
+
 function textoParada(dest) {
   const poi = pois.find((x) => x.nombre === dest.nombre);
   const foto = poi && poi.foto ? `<br><img src="${poi.foto}" alt="${poi.nombre}">` : "";
@@ -500,6 +564,16 @@ function dibujarMinimapa(p) {
 
 function mostrarResumen() {
   sim.pausa = true;
+  if (ruta.rover) {
+    const s0 = ruta.sol[0], s1 = ruta.sol[ruta.sol.length - 1];
+    $("hc-resumen-datos").innerHTML = `
+      <p>${t("rv_recorrido")}: <b>${(ruta.largo / 1000).toFixed(2)} km</b></p>
+      <p>SOL: <b>${s0} → ${s1}</b></p>
+      <p>${t("rv_fecha")}: <b>${fechaTierra(s0)} → ${fechaTierra(s1)}</b></p>
+      <p>${t("rv_sale", { sol: s1, total: ruta.solFinal, km: ruta.kmMision.toFixed(1) })}</p>`;
+    $("hc-resumen").classList.remove("oculto");
+    return;
+  }
   const params = sim.params;
   const dosis = (ruta.total / 24) * params.radiacion * (params.tormenta ? params.multTormenta : 1);
   $("hc-resumen-datos").innerHTML = `
@@ -530,8 +604,8 @@ function paso() {
   }
 
   // camara a la altura de los ojos, con un balanceo suave por cada paso (gravedad de Marte)
-  const balanceo = p.velocidad > 0 ? Math.abs(Math.sin((p.d / ZANCADA) * Math.PI)) * 0.04 : 0;
-  const yObjetivo = alturaSuelo(p.x, p.s) + OJOS + balanceo;
+  const balanceo = !ruta.rover && p.velocidad > 0 ? Math.abs(Math.sin((p.d / ZANCADA) * Math.PI)) * 0.04 : 0;
+  const yObjetivo = alturaSuelo(p.x, p.s) + (ruta.rover ? OJOS_ROVER : OJOS) + balanceo;
   sim.y = sim.y === null ? yObjetivo : sim.y + (yObjetivo - sim.y) * Math.min(1, dt * 8);
   camara.position.copy(a3D(p.x, p.s, sim.y));
   camara.rotation.y = -THREE.MathUtils.degToRad(sim.rumboCamino) + cabeza.yaw;
@@ -547,7 +621,22 @@ function paso() {
 }
 
 // ================= Abrir / cerrar =================
-async function abrirCasco(mision, params, nombres, paradas) {
+// Etiquetas de la telemetria: en modo rover cambian (MET -> SOL, DOSIS -> fecha...)
+const ETIQ_NORMAL = ["met", "recorrido", "dosis", "regreso_en"];
+const ETIQ_ROVER = ["rv_sol", "rv_recorrido_c", "rv_fecha", "rv_falta"];
+function ponerModo(modoRover) {
+  document.body.classList.toggle("modo-rover", modoRover);
+  const claves = modoRover ? ETIQ_ROVER : ETIQ_NORMAL;
+  $("hc-tele").querySelectorAll("span[data-i18n]").forEach((el, i) => { el.dataset.i18n = claves[i]; el.innerHTML = t(claves[i]); });
+  $("hc-salir").dataset.i18n = modoRover ? "rv_salir" : "abortar";
+  $("hc-salir").innerHTML = t($("hc-salir").dataset.i18n);
+  $("hc-resumen").querySelector("h2").dataset.i18n = modoRover ? "rv_fin" : "fin";
+  $("hc-resumen").querySelector("h2").innerHTML = t(modoRover ? "rv_fin" : "fin");
+  const vels = modoRover ? VEL_X_ROVER : VEL_X_NORMAL;
+  document.querySelectorAll("#hc-velocidad button").forEach((b, i) => { b.dataset.x = vels[i]; b.textContent = `×${vels[i]}`; });
+}
+
+async function prepararEscena() {
   document.body.classList.add("modo-casco3d");
   if (!renderer) {
     crearEscena();
@@ -561,18 +650,44 @@ async function abrirCasco(mision, params, nombres, paradas) {
     } catch { indice = null; }
   }
   ajustarTamano();
-  ruta = armarRuta(mision, params, nombres, paradas);
+}
+
+async function abrirCasco(mision, params, nombres, paradas) {
+  try {
+    await prepararEscena();
+    ponerModo(false);
+    empezar(armarRuta(mision, params, nombres, paradas), params, 60, !indice ? t("a_sin_hirise")
+      : indice.conFoto.size ? t("a_aprobada")
+      : t("a_sin_foto"));
+  } catch (e) { falloAlAbrir(e); }
+}
+
+async function abrirCascoRover(rv, params) {
+  try {
+    await prepararEscena();
+    ponerModo(true);
+    empezar(armarRutaRover(rv), params, 2000, t("rv_inicio"));
+  } catch (e) { falloAlAbrir(e); }
+}
+
+// Si algo truena al abrir el visor, se regresa al mapa en vez de quedarse en negro
+function falloAlAbrir(e) {
+  console.error("No se pudo abrir el visor:", e);
+  cerrarCasco();
+  alert(t("a_error_visor"));
+}
+
+function empezar(nuevaRuta, params, multiplicador, mensaje) {
+  ruta = nuevaRuta;
   if (balizas) escena.remove(balizas);
   crearBalizas();
-  sim = { t: 0, pausa: false, multiplicador: 60, params, pos: null, y: null,
+  sim = { t: 0, pausa: false, multiplicador, params, pos: null, y: null,
           rumboCamino: rumbo({ x: ruta.x[0], s: ruta.s[0] }, posicionPorDistancia(6)), ultimaRevision: 0 };
   mirarAlFrente();
   $("hc-resumen").classList.add("oculto");
-  document.querySelectorAll("#hc-velocidad button").forEach((b) => b.classList.toggle("activo", b.dataset.x === "60"));
+  document.querySelectorAll("#hc-velocidad button").forEach((b) => b.classList.toggle("activo", Number(b.dataset.x) === multiplicador));
   $("hc-pausa").textContent = t("pausa");
-  alerta(!indice ? t("a_sin_hirise")
-    : indice.conFoto.size ? t("a_aprobada")
-    : t("a_sin_foto"), "info", 4);
+  alerta(mensaje, "info", 4);
   reloj.reset();
   renderer.setAnimationLoop(paso);
 }
@@ -581,10 +696,12 @@ function cerrarCasco() {
   if (giro) alternarGiroscopio();
   if (renderer) renderer.setAnimationLoop(null);
   document.body.classList.remove("modo-casco3d");
+  ponerModo(false);
 }
 
 // ---------- Botones del casco ----------
 window.abrirCasco = abrirCasco;
+window.abrirCascoRover = abrirCascoRover;
 $("hc-salir").addEventListener("click", cerrarCasco);
 $("hc-volver").addEventListener("click", cerrarCasco);
 $("hc-frente").addEventListener("click", mirarAlFrente);

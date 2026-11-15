@@ -85,6 +85,7 @@ Reproduce the route check with Node.js: `node scripts/validar_ruta.js jezero` (i
 - Crater rims drawn on the ground around you (amber = on your route) and on the minimap. You leave through the airlock of a full-size habitat.
 - Speed x1 to x300, gyroscope on tablets, minimap.
 - **Replay Perseverance mission:** drive the real NASA/JPL traverse of the rover from Mastcam-Z height, with sol and Earth date.
+- **Traverse log** (`js/bitacora.js`): every walk or rover replay in the visor is saved in the browser (time, distance, climb, geology, alerts, O₂, dose). Export it and add it to git with `scripts/bitacora.py`; see [BITACORA.md](BITACORA.md).
 
 ### 4. Global Mars map and landing safety
 - Start screen with the whole planet (Viking MDIM 2.1 colour mosaic, cut into tiles that ship with the app) and 10 historic landing sites. Sites with processed terrain are marked **READY**; selecting one shows only that site's data (photo, HiRISE, traverse, craters) on the globe.
@@ -239,6 +240,7 @@ scripts/
   descargar_zona.py  searches the USGS STAC catalog for CTX/HiRISE DTMs around a point
   revisar_tif.py     prints the info of a GeoTIFF
   hacer_iconos.py    app icons
+  bitacora.py        adds exported traverse logs to docs/data/zonas/<site>/bitacora.json
 docs/                the web app (this folder is what GitHub Pages publishes)
   index.html
   css/estilos.css
@@ -247,6 +249,7 @@ docs/                the web app (this folder is what GitHub Pages publishes)
   js/vista3d.js      3D table
   js/casco.js        first-person visor
   js/replay.js       Perseverance replay
+  js/bitacora.js     traverse log of the visor (IndexedDB, no UI; see BITACORA.md)
   js/crateres.js     crater layer, craters on the route, "Select zone" tool
   js/explorador.js   crater explorer (detail map, list, filters, crater card)
   js/habitat3d.js    3D habitat model (3D table and visor)

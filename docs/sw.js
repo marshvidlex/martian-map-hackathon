@@ -2,7 +2,7 @@
 // Estrategia "primero la red": si hay internet trae lo nuevo y lo guarda;
 // si no hay, usa la copia guardada. Asi no te quedas con versiones viejas mientras programas.
 
-const CACHE = "martian-map-v36"; // si cambias la lista de archivos, sube el numero
+const CACHE = "martian-map-v37"; // si cambias la lista de archivos, sube el numero
 // Ojo: en index.html los css/js llevan ?v=NN; subelo junto con este numero para que el navegador no use copias viejas.
 
 const ARCHIVOS = [
@@ -21,6 +21,7 @@ const ARCHIVOS = [
   "js/explorador.js",
   "js/habitat3d.js",
   "js/replay.js",
+  "js/bitacora.js",
   "js/marte.js",
   "js/fases.js",
   "data/sitios.json",
@@ -50,7 +51,7 @@ const ZONAS = ["jezero", "gale"];
 const DATOS_ZONA = ["data/zonas.json"].concat(
   ["info.json", "cuadricula.json", "foto.png", "elevacion.png", "pendiente.png", "rugosidad.png",
     "geologia.png", "crateres.json", "ciencia.json", "aterrizaje.json", "aterrizaje.png", "M20_traverse.json", "poi.json",
-    "hirise/indice.json"].flatMap((a) => ZONAS.map((z) => `data/zonas/${z}/${a}`)));
+    "hirise/indice.json", "bitacora.json"].flatMap((a) => ZONAS.map((z) => `data/zonas/${z}/${a}`)));
 
 // Al instalar: guardamos la app, el mapa de Marte y los datos de Jezero.
 // Las fotos HiRISE de cerca se guardan la primera vez que se ven.

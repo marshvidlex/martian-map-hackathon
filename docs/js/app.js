@@ -177,6 +177,7 @@ async function iniciar() {
   if (window.iniciarCrateres) await iniciarCrateres();
   if (window.iniciarAterrizaje) await iniciarAterrizaje(); // zonas seguras para aterrizar (aterrizaje.js)
   if (window.iniciarCiencia) await iniciarCiencia(); // objetivos cientificos (ciencia.js)
+  if (window.Bitacora) Bitacora.preparar(); // bitacora de recorridos del visor (bitacora.js)
 
   // --- Eventos ---
   mapa.on("click", alTocarMapa);

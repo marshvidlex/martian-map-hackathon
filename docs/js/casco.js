@@ -28,6 +28,7 @@ let indice = null;
 const teselas = new Map();  // "i_j" -> { mesh, datos } o "cargando"
 let ruta = null;            // puntos de la mision con distancia y tiempo acumulados
 let sim = null;             // estado de la simulacion
+let grabadora = null;       // guarda el recorrido en la bitacora (bitacora.js); null si no esta cargada
 let cabeza = { yaw: 0, pitch: -0.05 }; // a donde voltea el astronauta (relativo al camino)
 let chevrones = [], balizas = null;
 let grupoCrateres = null, idsCrateresRuta = new Set(); // crateres YOLO cerca del astronauta
@@ -652,6 +653,7 @@ function dibujarMinimapa(p) {
 
 function mostrarResumen() {
   sim.pausa = true;
+  if (grabadora) grabadora.terminar("completado");
   if (ruta.rover) {
     const s0 = ruta.sol[0], s1 = ruta.sol[ruta.sol.length - 1];
     $("hc-resumen-datos").innerHTML = `
@@ -682,6 +684,7 @@ function paso() {
     if (sim.t >= ruta.total) { sim.t = ruta.total; mostrarResumen(); }
   }
   const p = (sim.pos = posicionPorTiempo(sim.t));
+  if (grabadora) grabadora.paso(sim, p);
 
   // hacia donde va el camino (mirando 6 m adelante, suaviza las esquinas de la cuadricula)
   const q = posicionPorDistancia(p.d + 6);
@@ -753,7 +756,7 @@ async function abrirCasco(mision, params, nombres, paradas) {
     idsCrateresRuta = new Set((window.crateresDeMision ? crateresDeMision(mision) : []).map((e) => e.c.id));
     empezar(armarRuta(mision, params, nombres, paradas), params, 60, !indice ? t("a_sin_hirise")
       : indice.conFoto.size ? t("a_aprobada")
-      : t("a_sin_foto"));
+      : t("a_sin_foto"), mision);
   } catch (e) { falloAlAbrir(e); }
 }
 
@@ -773,13 +776,15 @@ function falloAlAbrir(e) {
   alert(t("a_error_visor"));
 }
 
-function empezar(nuevaRuta, params, multiplicador, mensaje) {
+function empezar(nuevaRuta, params, multiplicador, mensaje, mision = null) {
+  if (grabadora) grabadora.terminar("abortado"); // por si quedo un recorrido abierto
   ruta = nuevaRuta;
   if (balizas) escena.remove(balizas);
   crearBalizas();
   ponerHabitat();
   sim = { t: 0, pausa: false, multiplicador, params, pos: null, y: null,
           rumboCamino: rumbo({ x: ruta.x[0], s: ruta.s[0] }, posicionPorDistancia(6)), ultimaRevision: 0, ultimosCrateres: 0 };
+  grabadora = window.Bitacora ? Bitacora.grabar(ruta, params, mision) : null;
   mirarAlFrente();
   $("hc-resumen").classList.add("oculto");
   document.querySelectorAll("#hc-velocidad button").forEach((b) => b.classList.toggle("activo", Number(b.dataset.x) === multiplicador));
@@ -790,6 +795,7 @@ function empezar(nuevaRuta, params, multiplicador, mensaje) {
 }
 
 function cerrarCasco() {
+  if (grabadora) { grabadora.terminar("abortado"); grabadora = null; } // si ya habia terminado no cambia nada
   if (giro) alternarGiroscopio();
   if (renderer) renderer.setAnimationLoop(null);
   document.body.classList.remove("modo-casco3d");

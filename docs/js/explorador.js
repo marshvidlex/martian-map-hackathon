@@ -12,8 +12,9 @@
 const EXP = {
   mapa: null, render: null, capa: null, sel: null, rutaCapa: null,
   filtrados: [], mostrados: 60, elegido: null,
-  color: "diametro",            // diametro | confianza | profundidad
-  f: { texto: "", conf: 0.4, dmin: 0, dmax: 100, ctx: true, hirise: true, ruta: false, orden: "conf" },
+  color: "diametro",            // diametro | confianza | profundidad | relieve
+  // relieve: todos | confirmado | solo_foto | rechazado (scripts/validar_crateres.py)
+  f: { texto: "", conf: 0.5, relieve: "todos", dmin: 0, dmax: 100, ctx: true, hirise: true, ruta: false, orden: "conf" },
   indHirise: null, geo: null, bins: {}, zMin: 0,
 };
 
@@ -25,7 +26,11 @@ const fmtM = (d) => (d >= 1000 ? `${(d / 1000).toFixed(2)} km` : d >= 10 ? `${Ma
 // Paleta secuencial (de chico/bajo a grande/alto), misma luminosidad creciente
 const PALETA = ["#5B6CFF", "#2FA8E0", "#3DDC84", "#FFD23F", "#FF8A3D"];
 const CLASES_D = [10, 30, 100, 300];       // m: limites de las clases de diametro
+// Revision con el relieve (validar_crateres.py): confirmado / solo en la foto / rechazado
+const COLOR_RELIEVE = { confirmado: "#4FD1E8", solo_foto: "#C9D1DF", rechazado: "#FF5A5F" };
+const hayRelieve = () => CRATER.lista.some((c) => c.relieve);
 function colorDe(c) {
+  if (EXP.color === "relieve") return COLOR_RELIEVE[c.relieve] || "#C9D1DF";
   if (EXP.color === "confianza") return PALETA[Math.min(4, Math.floor((c.conf - 0.25) / 0.15))];
   if (EXP.color === "profundidad") {
     if (c.prof === null || c.prof === undefined || c.prof <= 0) return "#7B8496";
@@ -36,6 +41,7 @@ function colorDe(c) {
   return PALETA[k];
 }
 function textosLeyenda() {
+  if (EXP.color === "relieve") return [];
   if (EXP.color === "confianza") return ["25–40%", "40–55%", "55–70%", "70–85%", "85–99%"];
   if (EXP.color === "profundidad") return ["d/D < 0.02", "0.02–0.05", "0.05–0.08", "0.08–0.12", "> 0.12"];
   return ["< 10 m", "10–30 m", "30–100 m", "100–300 m", "> 300 m"];
@@ -151,10 +157,11 @@ function conectarControles() {
   $("exp-ctx").addEventListener("change", (e) => { EXP.f.ctx = e.target.checked; refiltrar(); });
   $("exp-hirise").addEventListener("change", (e) => { EXP.f.hirise = e.target.checked; refiltrar(); });
   $("exp-ruta").addEventListener("change", (e) => { EXP.f.ruta = e.target.checked; refiltrar(); });
+  $("exp-relieve").addEventListener("change", (e) => { EXP.f.relieve = e.target.value; refiltrar(); });
   $("exp-orden").addEventListener("change", (e) => { EXP.f.orden = e.target.value; refiltrar(); });
   $("exp-limpiar").addEventListener("click", () => {
-    Object.assign(EXP.f, { texto: "", conf: 0.4, dmin: 0, dmax: 100, ctx: true, hirise: true, ruta: false });
-    $("exp-buscar").value = ""; $("exp-conf").value = 0.4; $("exp-dmin").value = 0; $("exp-dmax").value = 100;
+    Object.assign(EXP.f, { texto: "", conf: 0.5, relieve: "todos", dmin: 0, dmax: 100, ctx: true, hirise: true, ruta: false });
+    $("exp-buscar").value = ""; $("exp-conf").value = 0.5; $("exp-relieve").value = "todos"; $("exp-dmin").value = 0; $("exp-dmax").value = 100;
     $("exp-ctx").checked = $("exp-hirise").checked = true; $("exp-ruta").checked = false;
     refiltrar();
   });
@@ -192,7 +199,14 @@ function aplicarFiltros() {
   const q = f.texto.toLowerCase().replace(/^#/, "");
   EXP.filtrados = CRATER.lista.filter((c) => {
     if (q && !(String(c.id) === q || String(c.id).startsWith(q))) return false;
-    if (c.conf < f.conf || c.d < dmin || c.d > dmax) return false;
+    // los rechazados por el relieve solo se ven si se piden (para mostrar que se quito y por que)
+    if (f.relieve === "rechazado") { if (c.relieve !== "rechazado") return false; }
+    else {
+      if (c.relieve === "rechazado") return false;
+      if (f.relieve !== "todos" && c.relieve !== f.relieve) return false;
+      if (c.conf < f.conf) return false;
+    }
+    if (c.d < dmin || c.d > dmax) return false;
     const deCtx = c.fuente.includes("ctx"), deHi = c.fuente.includes("hirise");
     if (!((f.ctx && deCtx) || (f.hirise && deHi))) return false;
     if (f.ruta && !enRuta.has(c.id)) return false;
@@ -221,12 +235,14 @@ function aplicarFiltros() {
 // ---------------------------------------------------------------- estadisticas + histograma
 function dibujarEstadisticas() {
   const l = EXP.filtrados;
-  const conProf = l.filter((c) => c.prof > 0);
+  // solo los que el DEM puede medir (en los chicos la profundidad no es confiable)
+  const conProf = l.filter((c) => c.prof > 0 && c.prof_medible !== false);
   const mayor = l.reduce((m, c) => (!m || c.d > m.d ? c : m), null);
   const area = (info.ancho_m * info.alto_m) / 1e6;
   const poner = (id, v) => (document.getElementById(id).textContent = v);
   poner("exp-total", l.length.toLocaleString("en-US"));
-  poner("exp-total-de", t("exp_de", { n: CRATER.lista.length.toLocaleString("en-US") }));
+  poner("exp-total-de", t("exp_de", { n: CRATER.lista.length.toLocaleString("en-US") }) +
+    (hayRelieve() ? " · " + t("exp_confirmados", { n: l.filter((c) => c.relieve === "confirmado").length }) : ""));
   poner("exp-mayor", mayor ? fmtM(mayor.d) : "--");
   poner("exp-prof", conProf.length ? `${(conProf.reduce((s, c) => s + c.prof, 0) / conProf.length).toFixed(1)} m` : "--");
   poner("exp-dens", `${(l.length / area).toFixed(1)} /km²`);
@@ -292,7 +308,8 @@ function dibujarMapa() {
     const ruta = EXP.enRuta.has(c.id);
     const col = colorDe(c);
     const circ = L.circle([info.alto_m - c.s, c.x], {
-      radius: Math.max(c.d / 2, 1.5), renderer: EXP.render, color: col, weight: ruta ? 3 : 1.6,
+      radius: Math.max(c.d / 2, 1.5), renderer: EXP.render, color: ruta ? "#FFFFFF" : col, weight: ruta ? 3 : 1.6,
+      dashArray: EXP.color === "relieve" && c.relieve === "solo_foto" && !ruta ? "4 4" : null,
       opacity: 0.95, fillColor: col, fillOpacity: c.d > 100 ? 0.05 : ruta ? 0.25 : 0.12,
     });
     circ.bindTooltip(`#${c.id} · ${fmtM(c.d)} · ${Math.round(c.conf * 100)}%`, { direction: "top", sticky: true, className: "exp-tip" });
@@ -306,6 +323,8 @@ function dibujarLeyenda() {
   document.getElementById("exp-leyenda").innerHTML = nombres.map((n, i) =>
     `<div><span style="border-color:${PALETA[i]};background:${PALETA[i]}26"></span>${n}</div>`).join("") +
     (EXP.color === "profundidad" ? `<div><span style="border-color:#7B8496"></span>${t("exp_sin_prof")}</div>` : "") +
+    (EXP.color === "relieve" ? ["confirmado", "solo_foto", "rechazado"].map((k) =>
+      `<div><span style="border-color:${COLOR_RELIEVE[k]};${k === "solo_foto" ? "border-style:dashed;" : ""}background:${COLOR_RELIEVE[k]}26"></span>${t("exp_rel_" + k)}</div>`).join("") : "") +
     (ultimaMision ? `<div><span class="grueso"></span>${t("crat_ley_ruta")}</div>` : "");
 }
 
@@ -396,6 +415,8 @@ async function mostrarFicha(c) {
     [t("exp_relacion"), relacion !== null ? relacion.toFixed(3) : "--"],
     [t("exp_estado"), estado],
     [t("exp_conf_l"), `${Math.round(c.conf * 100)}%`],
+    ...(c.relieve ? [[t("exp_relieve"), t("exp_rel_" + c.relieve)]] : []),
+    ...(window.estadoAterrizajeEn ? [[t("exp_aterrizaje"), estadoAterrizajeEn(c.x, c.s)]] : []),
     [t("exp_votos"), String(c.votos)],
     [t("exp_fuente"), c.fuente.toUpperCase()],
     [t("exp_hoyo"), c.hoyo !== null && c.hoyo !== undefined ? `${Math.round(c.hoyo * 8)}/8` : "--"],

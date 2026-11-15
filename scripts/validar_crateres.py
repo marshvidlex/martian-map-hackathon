@@ -41,6 +41,8 @@ PROF_DIAM_MIN = 0.03      # profundidad / diametro (medida con promedios)
 MINIMO_REL = 0.3          # el punto mas bajo del borde debe subir al menos 30% de la profundidad
 DISP_MAX = 0.4            # que tan disparejo puede ser el borde (desviacion / profundidad)
 RELIEVE_CONTRA = 3.0      # m: desnivel del borde (o loma en el centro) que contradice a YOLO
+HUNDIDO_MIN = 0.5         # si menos de la mitad de lo de alrededor esta mas alto que el fondo, no es un hoyo
+D_MIN_HUNDIDO = 60.0      # m: desde este tamano se puede revisar eso con el DEM de 2 m
 
 
 def cargar_dem(carpeta):
@@ -116,6 +118,21 @@ class Relieve:
         return m
 
 
+def fraccion_hundido(rel, x, s, d):
+    """Que fraccion del terreno de alrededor (a 1.6 radios, 16 direcciones) esta MAS ALTO que el fondo.
+    Un crater (aunque este relleno y casi plano) es una depresion: casi todo lo de alrededor esta mas alto.
+    La cima de una mesa o una loma da menos de la mitad."""
+    r = d / 2 / rel.paso
+    fila, col = (s - rel.o) / rel.paso, (x - rel.o) / rel.paso
+    fondo = rel.caja(fila, col, max(1, round(r * 0.35)))
+    alrededor = np.array([rel.caja(fila + 1.6 * r * np.sin(a), col + 1.6 * r * np.cos(a), max(1, round(r * 0.2)))
+                          for a in np.linspace(0, 2 * np.pi, 16, endpoint=False)])
+    alrededor = alrededor[np.isfinite(alrededor)]
+    if not np.isfinite(fondo) or len(alrededor) < 8:
+        return None
+    return float((alrededor > fondo).mean())
+
+
 def ajustar(rel, c):
     """Busca el centro y el radio que mejor encajan alrededor de la caja de YOLO."""
     r0 = c["d"] / 2
@@ -155,8 +172,11 @@ def main():
     cuenta = {"confirmado": 0, "rechazado": 0, "solo_foto": 0}
     for c in datos["crateres"]:
         c["d_yolo"], c["conf_yolo"] = c["d"], c["conf"]
+        c["prof_medible"] = False
         if c["d"] < D_MIN_VERIFICABLE:
+            # el DEM de 2 m no alcanza: la profundidad que traiga no es confiable
             c["relieve"] = "solo_foto"
+            c["prof"] = None
             cuenta["solo_foto"] += 1
             continue
         m = ajustar(rel, c)
@@ -166,6 +186,7 @@ def main():
             c["relieve"] = "confirmado"
             c["x"], c["s"], c["d"] = round(m["x"], 1), round(m["s"], 1), round(2 * m["r"], 1)
             c["prof"] = round(m["prof_centro"], 1)
+            c["prof_medible"] = True
             c["conf"] = round(min(0.99, 0.5 + 0.5 * c["conf"]), 2)
             c["lon"] = round(info["oeste"] + c["x"] / info["ancho_m"] * (info["este"] - info["oeste"]), 6)
             c["lat"] = round(info["norte"] - c["s"] / info["alto_m"] * (info["norte"] - info["sur"]), 6)
@@ -176,10 +197,22 @@ def main():
             #    de lo que el hoyo baja. Es lo tipico de los circulos falsos en el delta.
             c["relieve"] = "rechazado"
             c["conf"] = round(c["conf"] * 0.3, 2)
+            c["prof"] = None
+        elif c["d"] >= D_MIN_HUNDIDO and (fh := fraccion_hundido(rel, c["x"], c["s"], c["d"])) is not None \
+                and fh < HUNDIDO_MIN:
+            # 2b) RECHAZADO: el "fondo" no esta hundido respecto a lo de alrededor (cima de mesa o loma)
+            c["relieve"] = "rechazado"
+            c["conf"] = round(c["conf"] * 0.3, 2)
+            c["prof"] = None
         else:
             # 3) Sin confirmar: el terreno es plano y el hoyo es muy poco hondo (crateres viejos
             #    rellenos de arena, muy comunes en el piso de Jezero). La foto manda; se deja como YOLO.
             c["relieve"] = "solo_foto"
+            if m0 is not None and m0.get("prof_centro", 0) > 0.3:
+                c["prof"] = round(m0["prof_centro"], 1)   # hondo medido con el DEM (poco, pero real)
+                c["prof_medible"] = True
+            else:
+                c["prof"] = None
         cuenta[c["relieve"]] += 1
 
     datos["validacion"] = {

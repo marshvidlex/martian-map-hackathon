@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
   <link rel="stylesheet" href="lib/leaflet/leaflet.css">
-  <link rel="stylesheet" href="css/estilos.css?v=25">
+  <link rel="stylesheet" href="css/estilos.css?v=27">
 </head>
 <body>
 
@@ -323,7 +323,16 @@
           <h2 data-i18n="exp_filtros">FILTERS</h2>
           <input id="exp-buscar" type="search" inputmode="numeric" placeholder="#ID" aria-label="Search crater ID">
           <label class="exp-rango"><span data-i18n="crat_conf">Min. confidence</span><span id="exp-conf-txt" class="dato"></span>
-            <input type="range" id="exp-conf" min="0.25" max="0.95" step="0.05" value="0.4"></label>
+            <input type="range" id="exp-conf" min="0.25" max="0.95" step="0.05" value="0.5"></label>
+          <div class="exp-orden">
+            <label for="exp-relieve" class="tenue" data-i18n="exp_relieve">Relief check</label>
+            <select id="exp-relieve">
+              <option value="todos" data-i18n="exp_rel_todos">All (not rejected)</option>
+              <option value="confirmado" data-i18n="exp_rel_confirmado">Confirmed by elevation</option>
+              <option value="solo_foto" data-i18n="exp_rel_solo_foto">Photo only</option>
+              <option value="rechazado" data-i18n="exp_rel_rechazado">Rejected by elevation</option>
+            </select>
+          </div>
           <div class="exp-rango"><span data-i18n="exp_diam">Diameter</span><span id="exp-d-txt" class="dato"></span>
             <div class="doble-rango">
               <input type="range" id="exp-dmin" min="0" max="100" step="0.5" value="0" aria-label="Min diameter">
@@ -362,6 +371,7 @@
             <button data-color="diametro" class="activo" data-i18n="exp_diam">Diameter</button>
             <button data-color="confianza" data-i18n="exp_conf_l">Confidence</button>
             <button data-color="profundidad" data-i18n="exp_relacion">Depth/diameter</button>
+            <button data-color="relieve" data-i18n="exp_relieve">Relief check</button>
           </div>
           <div id="exp-leyenda" class="exp-leyenda"></div>
         </div>
@@ -462,19 +472,20 @@
   </div>
 
   <script src="lib/leaflet/leaflet.js"></script>
-  <script src="js/idioma.js?v=25"></script>
-  <script src="js/ruta.js?v=25"></script>
-  <script src="js/app.js?v=25"></script>
-  <script src="js/crateres.js?v=25"></script>
-  <script src="js/explorador.js?v=25"></script>
-  <script src="js/replay.js?v=25"></script>
-  <script src="js/marte.js?v=25"></script>
+  <script src="js/idioma.js?v=27"></script>
+  <script src="js/ruta.js?v=27"></script>
+  <script src="js/app.js?v=27"></script>
+  <script src="js/crateres.js?v=27"></script>
+  <script src="js/aterrizaje.js?v=27"></script>
+  <script src="js/explorador.js?v=27"></script>
+  <script src="js/replay.js?v=27"></script>
+  <script src="js/marte.js?v=27"></script>
 
   <!-- Three.js para la vista 3D (archivos locales, funciona sin internet) -->
   <script type="importmap">
     { "imports": { "three": "./lib/three/three.module.js" } }
   </script>
-  <script type="module" src="js/vista3d.js?v=25"></script>
-  <script type="module" src="js/casco.js?v=25"></script>
+  <script type="module" src="js/vista3d.js?v=27"></script>
+  <script type="module" src="js/casco.js?v=27"></script>
 </body>
 </html>

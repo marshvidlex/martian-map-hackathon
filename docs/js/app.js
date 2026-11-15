@@ -147,6 +147,7 @@ async function iniciar() {
 
   // --- Crateres detectados con YOLO (crateres.js, opcional) ---
   if (window.iniciarCrateres) await iniciarCrateres();
+  if (window.iniciarAterrizaje) await iniciarAterrizaje(); // zonas seguras para aterrizar (aterrizaje.js)
 
   // --- Eventos ---
   mapa.on("click", alTocarMapa);
@@ -344,6 +345,9 @@ function alTocarMapa(e) {
     return;
   }
 
+  // el habitat es donde aterriza la nave: solo en zonas seguras (aterrizaje.js)
+  if (window.revisarAterrizaje && !revisarAterrizaje(celda)) return;
+
   const params = leerParametros();
   if (bloqueada(cuad, celda, params)) {
     const p = cuad.pendiente[celda];
@@ -361,6 +365,7 @@ function alTocarMapa(e) {
   marcadores.push(L.marker(celdaAMapa(celda), { icon: icono }).addTo(mapa).bindTooltip(nombreParada(k)));
 
   if (k === 0) {
+    if (window.aterrizajeHabitatPuesto) aterrizajeHabitatPuesto();
     decir("i_primera");
     dibujarZonaRegreso();
   } else {

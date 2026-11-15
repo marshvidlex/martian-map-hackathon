@@ -24,6 +24,7 @@ async function iniciarCiencia() {
   }
 }
 window.iniciarCiencia = iniciarCiencia;
+window.abrirFotoPoi = (p, k = 0) => (p && (p.fotos || []).length ? abrirFotoGrande(p, k) : null);
 
 // Los textos de cada lugar en el idioma actual (app.js, vista3d.js y casco.js leen que_estudiar)
 function traducirPois() {
@@ -34,6 +35,8 @@ function traducirPois() {
     p.instrumento = txt.inst;
     p.muestra = txt.muestra;
   }
+  // primera foto del rover: la usan el casco (casco.js) y la vista 3D
+  for (const p of pois) if ((p.fotos || []).length) p.foto = DATOS + p.fotos[0].archivo;
 }
 
 const objetivoDe = (p) => CIENCIA.objetivos.find((o) => o.id === p.objetivo);
@@ -48,10 +51,66 @@ function htmlFicha(p) {
     <dl><dt>${t("ci_inst")}</dt><dd>${p.instrumento}</dd>
         <dt>${t("ci_muestra")}</dt><dd>${p.muestra}</dd>
         ${p.sol ? `<dt>${t("ci_rover")}</dt><dd>${t("ci_sol", { n: p.sol })}</dd>` : ""}</dl>
+    ${htmlGaleria(p, 0)}
     ${p.fuente ? `<a href="${p.fuente}" target="_blank" rel="noopener">${t("ci_fuente")}</a>` : ""}
     <button class="btn-sec btn-ancho" data-poi-agregar="${p.id}">${t("ci_agregar")}</button>
   </div>`;
 }
+
+// Fotos que tomo Perseverance en ese lugar (scripts/descargar_fotos_rover.py)
+function pieFoto(f) {
+  return `${f.camara} · ${t("ci_sol_corto", { n: f.sol })} · ${f.credito}`;
+}
+function htmlGaleria(p, k) {
+  const fotos = p.fotos || [];
+  if (!fotos.length) return "";
+  const f = fotos[k];
+  return `<figure class="poi-galeria" data-poi="${p.id}" data-k="${k}">
+    <div class="poi-galeria-marco">
+      <img src="${DATOS + f.archivo}" alt="${p.nombre}" data-poi-grande="${p.id}" loading="lazy">
+      ${fotos.length > 1 ? `<button class="poi-gal-ant" data-gal="-1" aria-label="prev">‹</button>
+        <button class="poi-gal-sig" data-gal="1" aria-label="next">›</button>
+        <span class="poi-gal-num">${k + 1}/${fotos.length}</span>` : ""}
+    </div>
+    <figcaption>${t("ci_visto")} · ${pieFoto(f)}</figcaption>
+  </figure>`;
+}
+
+// Visor grande de la foto
+function abrirFotoGrande(p, k) {
+  let v = document.getElementById("visor-foto");
+  if (!v) {
+    v = document.createElement("div");
+    v.id = "visor-foto";
+    document.body.appendChild(v);
+    v.addEventListener("click", (e) => { if (e.target === v || e.target.closest("[data-cerrar]")) v.classList.remove("abierto"); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") v.classList.remove("abierto"); });
+  }
+  const f = p.fotos[k];
+  v.innerHTML = `<figure>
+    <img src="${DATOS + f.archivo}" alt="${p.nombre}">
+    <figcaption><b>${p.nombre}</b> · ${pieFoto(f)}
+      ${f.url ? ` · <a href="${f.url}" target="_blank" rel="noopener">${t("ci_original")}</a>` : ""}</figcaption>
+    <button class="btn-sec" data-cerrar>${t("ci_cerrar")}</button>
+  </figure>`;
+  v.classList.add("abierto");
+}
+
+document.addEventListener("click", (e) => {
+  const g = e.target.closest("[data-gal]");
+  if (g) {
+    e.preventDefault(); e.stopPropagation();
+    const fig = g.closest(".poi-galeria"), p = pois.find((x) => x.id === fig.dataset.poi);
+    const n = p.fotos.length, k = (Number(fig.dataset.k) + Number(g.dataset.gal) + n) % n;
+    fig.outerHTML = htmlGaleria(p, k);
+    return;
+  }
+  const im = e.target.closest("[data-poi-grande]");
+  if (im) {
+    const p = pois.find((x) => x.id === im.dataset.poiGrande);
+    abrirFotoGrande(p, Number(im.closest(".poi-galeria").dataset.k));
+  }
+});
 
 // Estrellas en el mapa (reemplazan los circulos amarillos simples de app.js)
 function pintarPois() {
@@ -64,7 +123,7 @@ function pintarPois() {
       title: p.nombre,
     });
     mk.bindTooltip(p.nombre, { direction: "top", offset: [0, -12] });
-    mk.bindPopup(() => htmlFicha(p), { maxWidth: 300 });
+    mk.bindPopup(() => htmlFicha(p), { maxWidth: 320, autoPanPaddingTopLeft: L.point(20, 140), minWidth: (p.fotos || []).length ? 300 : 240 });
     CIENCIA.marcas.addLayer(mk);
   }
   CIENCIA.marcas.addTo(mapa);
@@ -138,7 +197,7 @@ function pintarSeccion() {
         <label><input type="checkbox" data-objetivo="${o.id}" ${CIENCIA.elegidos.has(o.id) ? "checked" : ""}>
           <span><b>${txt.titulo}</b><small>${txt.desc}</small></span></label>
         <ul>${lugares.map((p) => `<li><button data-poi-ver="${p.id}" class="${estaEnRuta(p) ? "en-ruta" : ""}">
-          <i>★</i><span>${p.nombre}</span>${estaEnRuta(p) ? "<em>✓</em>" : ""}</button></li>`).join("")}</ul>
+          <i>★</i><span>${p.nombre}</span>${(p.fotos || []).length ? `<small class="ci-cam" title="${t("ci_visto")}">📷</small>` : ""}${estaEnRuta(p) ? "<em>✓</em>" : ""}</button></li>`).join("")}</ul>
       </div>`;
     }).join("")}
     <button id="btn-ci-planear" class="btn-principal btn-ancho">${t("ci_planear")}</button>`;

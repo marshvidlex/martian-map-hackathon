@@ -2,7 +2,7 @@
 // Estrategia "primero la red": si hay internet trae lo nuevo y lo guarda;
 // si no hay, usa la copia guardada. Asi no te quedas con versiones viejas mientras programas.
 
-const CACHE = "martian-map-v31"; // si cambias la lista de archivos, sube el numero
+const CACHE = "martian-map-v32"; // si cambias la lista de archivos, sube el numero
 // Ojo: en index.html los css/js llevan ?v=NN; subelo junto con este numero para que el navegador no use copias viejas.
 
 const ARCHIVOS = [
@@ -58,6 +58,9 @@ self.addEventListener("install", (e) => {
     c.addAll(ARCHIVOS),
     // uno por uno: si falta alguno no se cae toda la instalacion
     ...MOSAICOS_MARTE.concat(DATOS_ZONA).map((u) => c.add(u).catch(() => null)),
+    // fotos de Perseverance de los lugares de ciencia (scripts/descargar_fotos_rover.py)
+    fetch("data/zonas/jezero/poi.json").then((r) => r.json()).then((pois) => Promise.all(pois.flatMap((p) =>
+      (p.fotos || []).map((f) => c.add(`data/zonas/jezero/${f.archivo}`).catch(() => null))))).catch(() => null),
     // nivel 4 (mas detalle) alrededor de cada sitio de aterrizaje: 3 x 3 mosaicos por sitio
     fetch("data/sitios.json").then((r) => r.json()).then((sitios) => Promise.all(sitios.flatMap((s) => {
       const cx = Math.floor(((s.lon + 180) / 360) * 32), cy = Math.floor(((90 - s.lat) / 180) * 16), lista = [];

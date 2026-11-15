@@ -228,7 +228,8 @@ function dibujarMision() {
     s.position.copy(celdaA3D(c, 200));
     s.userData.lugar = lugares.length; // al tocar el letrero, la camara va a este punto
     lugares.push({ nombre: k === 0 ? t("habitat") : `${k} · ${nombreParada(k)}`, pos: celdaA3D(c, 0),
-      tipo: k === 0 ? "habitat" : "parada", k, celda: c, titulo: nombreParada(k) });
+      tipo: k === 0 ? "habitat" : "parada", k, celda: c, titulo: nombreParada(k),
+      poi: k > 0 ? pois.find((p) => p.nombre === nombreParada(k)) : undefined });
     grupoMision.add(s);
   });
 
@@ -437,6 +438,17 @@ function mostrarFicha(i) {
 
   poner("ficha-texto", l.poi && l.poi.que_estudiar ? l.poi.que_estudiar
     : l.crater ? `${fmtCrater(l.crater)} · ${t("crat_tramo", { n: l.tramo })} · YOLO` : "");
+  // foto que tomo Perseverance en ese lugar (ciencia.js)
+  const ff = document.getElementById("ficha-foto");
+  if (ff) {
+    const tiene = l.poi && (l.poi.fotos || []).length;
+    ff.hidden = !tiene;
+    if (tiene) {
+      const f = l.poi.fotos[0];
+      ff.innerHTML = `<img src="${window.DATOS + f.archivo}" alt="${l.poi.nombre}"><figcaption>${t("ci_visto")} · ${f.camara} · ${t("ci_sol_corto", { n: f.sol })}</figcaption>`;
+      ff.onclick = () => window.abrirFotoPoi && abrirFotoPoi(l.poi, 0);
+    }
+  }
 }
 
 // Lee el color de geologia.png en ese punto y lo compara con la leyenda

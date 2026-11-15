@@ -770,3 +770,26 @@ body:not(.fase-review) #checklist3d { display: none; }
 .ci-objetivo li em { margin-left: auto; font-style: normal; color: var(--go); }
 .ci-objetivo li button.en-ruta span { color: #9FD9B6; }
 #fase-accion .fase-estado.ciencia { color: #FFE2B0; font-size: 13px; }
+
+/* Fotos de Perseverance en los lugares de ciencia */
+.poi-galeria { margin: 4px 0 0; display: flex; flex-direction: column; gap: 4px; }
+.poi-galeria-marco { position: relative; border-radius: 8px; overflow: hidden; background: #000; aspect-ratio: 4 / 3; }
+.poi-galeria-marco img { width: 100%; height: 100%; object-fit: cover; display: block; cursor: zoom-in; }
+.poi-galeria-marco button {
+  position: absolute; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; border-radius: 50%; border: 0;
+  background: rgba(11, 15, 23, 0.75); color: #fff; font-size: 20px; line-height: 1; cursor: pointer;
+}
+.poi-gal-ant { left: 6px; } .poi-gal-sig { right: 6px; }
+.poi-gal-num { position: absolute; right: 8px; bottom: 6px; font-size: 11px; color: #fff; background: rgba(11, 15, 23, 0.7); padding: 1px 6px; border-radius: 8px; }
+.poi-galeria figcaption, .ficha-foto figcaption { font-size: 11px; color: var(--tenue); }
+.ci-objetivo li .ci-cam { font-size: 11px; opacity: 0.8; }
+.ficha-foto { margin: 8px 0 0; cursor: zoom-in; }
+.ficha-foto img { width: 100%; max-height: 160px; object-fit: cover; border-radius: 8px; display: block; }
+#visor-foto { position: fixed; inset: 0; z-index: 3000; background: rgba(5, 7, 12, 0.92); display: none; align-items: center; justify-content: center; padding: 24px; }
+#visor-foto.abierto { display: flex; }
+#visor-foto figure { margin: 0; max-width: min(1100px, 95vw); display: flex; flex-direction: column; gap: 10px; align-items: center; }
+#visor-foto img { max-width: 100%; max-height: 78vh; border-radius: 10px; }
+#visor-foto figcaption { color: #C9D1DF; font-size: 13px; text-align: center; }
+#visor-foto a { color: var(--acento); }
+/* En REVIEW, si eliges un lugar en el 3D se ve su ficha (con foto) y la lista se oculta; "Whole site" la regresa */
+#vista3d:has(#ficha3d:not(.oculto)) #checklist3d { display: none; }

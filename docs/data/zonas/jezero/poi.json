@@ -21,7 +21,17 @@
    "muestra": "No"
   },
   "fuente": "https://science.nasa.gov/mission/mars-2020-perseverance/",
-  "ubicacion": "Perseverance position on sol 14 (M20_traverse.json)"
+  "ubicacion": "Perseverance position on sol 14 (M20_traverse.json)",
+  "fotos": [
+   {
+    "archivo": "fotos/butler_1.jpg",
+    "camara": "Navcam",
+    "sol": 1,
+    "credito": "NASA/JPL-Caltech",
+    "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00001/ids/edr/browse/ncam/NLB_0001_0667035586_056ECM_N0010052AUT_04096_00_2I3J01.png",
+    "imagen": "NLB_0001_0667035586_056ECM_N0010052AUT_04096_00_2I3J01"
+   }
+  ]
  },
  {
   "id": "rochette",
@@ -45,7 +55,33 @@
    "muestra": "Núcleo de roca"
   },
   "fuente": "https://science.nasa.gov/mission/mars-2020-perseverance/mars-rock-samples",
-  "ubicacion": "Perseverance position on sol 194 (M20_traverse.json)"
+  "ubicacion": "Perseverance position on sol 194 (M20_traverse.json)",
+  "fotos": [
+   {
+    "archivo": "fotos/rochette_1.jpg",
+    "camara": "Mastcam-Z",
+    "sol": 190,
+    "credito": "NASA/JPL-Caltech/ASU",
+    "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00190/ids/edr/browse/zcam/ZL0_0190_0683810662_303EBY_N0070000ZCAM05076_1100LUJ08.png",
+    "imagen": "ZL0_0190_0683810662_303EBY_N0070000ZCAM05076_1100LUJ"
+   },
+   {
+    "archivo": "fotos/rochette_2.jpg",
+    "camara": "Mastcam-Z",
+    "sol": 190,
+    "credito": "NASA/JPL-Caltech/ASU",
+    "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00190/ids/edr/browse/zcam/ZL0_0190_0683810582_303EBY_N0070000ZCAM05076_1100LUJ08.png",
+    "imagen": "ZL0_0190_0683810582_303EBY_N0070000ZCAM05076_1100LUJ"
+   },
+   {
+    "archivo": "fotos/rochette_3.jpg",
+    "camara": "Navcam",
+    "sol": 190,
+    "credito": "NASA/JPL-Caltech",
+    "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00190/ids/edr/browse/ncam/NLF_0190_0683808901_487EBY_N0070000NCAM00209_04_0LLJ01.png",
+    "imagen": "NLF_0190_0683808901_487EBY_N0070000NCAM00209_04_0LLJ"
+   }
+  ]
  },
  {
   "id": "brac",
@@ -69,7 +105,33 @@
    "muestra": "Núcleo de roca"
   },
   "fuente": "https://science.nasa.gov/mission/mars-2020-perseverance/mars-rock-samples",
-  "ubicacion": "Perseverance position on sol 262 (M20_traverse.json)"
+  "ubicacion": "Perseverance position on sol 262 (M20_traverse.json)",
+  "fotos": [
+   {
+    "archivo": "fotos/brac_1.jpg",
+    "camara": "Mastcam-Z",
+    "sol": 262,
+    "credito": "NASA/JPL-Caltech/ASU",
+    "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00262/ids/edr/browse/zcam/ZL0_0262_0690212861_460EBY_N0080000ZCAM05071_0340LMJ01.png",
+    "imagen": "ZL0_0262_0690212861_460EBY_N0080000ZCAM05071_0340LMJ"
+   },
+   {
+    "archivo": "fotos/brac_2.jpg",
+    "camara": "Mastcam-Z",
+    "sol": 262,
+    "credito": "NASA/JPL-Caltech/ASU",
+    "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00262/ids/edr/browse/zcam/ZL0_0262_0690212788_294EBY_N0080000ZCAM05069_0340LMJ01.png",
+    "imagen": "ZL0_0262_0690212788_294EBY_N0080000ZCAM05069_0340LMJ"
+   },
+   {
+    "archivo": "fotos/brac_3.jpg",
+    "camara": "Navcam",
+    "sol": 262,
+    "credito": "NASA/JPL-Caltech",
+    "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00262/ids/edr/browse/ncam/NRE_0262_0690212241_488ECM_N0080000NCAM00705_01_0LLJ01.png",
+    "imagen": "NRE_0262_0690212241_488ECM_N0080000NCAM00705_01_0LLJ"
+   }
+  ]
  },
  {
   "id": "issole",
@@ -93,7 +155,33 @@
    "muestra": "Núcleo de roca"
   },
   "fuente": "https://www.mn.uio.no/geo/english/research/projects/msr-asl-analogue-sample-library/msr-asl/three-forks/",
-  "ubicacion": "Perseverance position on sol 298 (M20_traverse.json)"
+  "ubicacion": "Perseverance position on sol 298 (M20_traverse.json)",
+  "fotos": [
+   {
+    "archivo": "fotos/issole_2.jpg",
+    "camara": "Mastcam-Z",
+    "sol": 286,
+    "credito": "NASA/JPL-Caltech/ASU",
+    "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00286/ids/edr/browse/zcam/ZR0_0286_0692338887_988EBY_N0090000ZCAM07107_0630LMJ01.png",
+    "imagen": "ZR0_0286_0692338887_988EBY_N0090000ZCAM07107_0630LMJ"
+   },
+   {
+    "archivo": "fotos/issole_1.jpg",
+    "camara": "Mastcam-Z",
+    "sol": 286,
+    "credito": "NASA/JPL-Caltech/ASU",
+    "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00286/ids/edr/browse/zcam/ZL0_0286_0692338902_988EBY_N0090000ZCAM07107_0630LMJ01.png",
+    "imagen": "ZL0_0286_0692338902_988EBY_N0090000ZCAM07107_0630LMJ"
+   },
+   {
+    "archivo": "fotos/issole_3.jpg",
+    "camara": "Navcam",
+    "sol": 286,
+    "credito": "NASA/JPL-Caltech",
+    "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00286/ids/edr/browse/ncam/NRF_0286_0692338094_408ECM_N0090000NCAM02286_01_195J01.png",
+    "imagen": "NRF_0286_0692338094_408ECM_N0090000NCAM02286_01_195J"
+   }
+  ]
  },
  {
   "id": "skinner",
@@ -117,7 +205,33 @@
    "muestra": "Núcleo de roca"
   },
   "fuente": "https://science.nasa.gov/mission/mars-2020-perseverance/mars-rock-samples",
-  "ubicacion": "Perseverance position on sol 490 (M20_traverse.json)"
+  "ubicacion": "Perseverance position on sol 490 (M20_traverse.json)",
+  "fotos": [
+   {
+    "archivo": "fotos/skinner_1.jpg",
+    "camara": "Mastcam-Z",
+    "sol": 490,
+    "credito": "NASA/JPL-Caltech/ASU",
+    "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00490/ids/edr/browse/zcam/ZL0_0490_0710456826_413EBY_N0261004ZCAM05071_0340LMJ01.png",
+    "imagen": "ZL0_0490_0710456826_413EBY_N0261004ZCAM05071_0340LMJ"
+   },
+   {
+    "archivo": "fotos/skinner_2.jpg",
+    "camara": "Mastcam-Z",
+    "sol": 490,
+    "credito": "NASA/JPL-Caltech/ASU",
+    "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00490/ids/edr/browse/zcam/ZL0_0490_0710456777_463EBY_N0261004ZCAM05070_0340LMJ01.png",
+    "imagen": "ZL0_0490_0710456777_463EBY_N0261004ZCAM05070_0340LMJ"
+   },
+   {
+    "archivo": "fotos/skinner_3.jpg",
+    "camara": "Navcam",
+    "sol": 490,
+    "credito": "NASA/JPL-Caltech",
+    "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00490/ids/edr/browse/ncam/NRF_0490_0710456117_926ECM_N0261004NCAM00709_01_095J02.png",
+    "imagen": "NRF_0490_0710456117_926ECM_N0261004NCAM00709_01_095J"
+   }
+  ]
  },
  {
   "id": "wildcat",
@@ -141,7 +255,33 @@
    "muestra": "Núcleo de roca"
   },
   "fuente": "https://www.jpl.nasa.gov/news/nasas-perseverance-rover-investigates-geologically-rich-mars-terrain/",
-  "ubicacion": "Perseverance position on sol 509 (M20_traverse.json)"
+  "ubicacion": "Perseverance position on sol 509 (M20_traverse.json)",
+  "fotos": [
+   {
+    "archivo": "fotos/wildcat_3.jpg",
+    "camara": "Navcam",
+    "sol": 509,
+    "credito": "NASA/JPL-Caltech",
+    "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00509/ids/edr/browse/ncam/NLF_0509_0712140650_691ECM_N0261222NCAM00709_08_095J01.png",
+    "imagen": "NLF_0509_0712140650_691ECM_N0261222NCAM00709_08_095J"
+   },
+   {
+    "archivo": "fotos/wildcat_1.jpg",
+    "camara": "Mastcam-Z",
+    "sol": 509,
+    "credito": "NASA/JPL-Caltech/ASU",
+    "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00509/ids/edr/browse/zcam/ZL0_0509_0712140530_180EBY_N0261222ZCAM05071_0340LMJ01.png",
+    "imagen": "ZL0_0509_0712140530_180EBY_N0261222ZCAM05071_0340LMJ"
+   },
+   {
+    "archivo": "fotos/wildcat_2.jpg",
+    "camara": "Mastcam-Z",
+    "sol": 509,
+    "credito": "NASA/JPL-Caltech/ASU",
+    "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00509/ids/edr/browse/zcam/ZL0_0509_0712140480_805ECM_N0261222ZCAM05070_0340LMJ01.png",
+    "imagen": "ZL0_0509_0712140480_805ECM_N0261222ZCAM05070_0340LMJ"
+   }
+  ]
  },
  {
   "id": "amalik",
@@ -165,7 +305,17 @@
    "muestra": "Núcleo de roca"
   },
   "fuente": "https://www.mn.uio.no/geo/english/research/projects/msr-asl-analogue-sample-library/msr-asl/three-forks/",
-  "ubicacion": "Perseverance position on sol 575 (M20_traverse.json)"
+  "ubicacion": "Perseverance position on sol 575 (M20_traverse.json)",
+  "fotos": [
+   {
+    "archivo": "fotos/amalik_3.jpg",
+    "camara": "Navcam",
+    "sol": 575,
+    "credito": "NASA/JPL-Caltech",
+    "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00575/ids/edr/browse/ncam/NLF_0575_0717997335_774ECM_N0290000NCAM00709_06_095J01.png",
+    "imagen": "NLF_0575_0717997335_774ECM_N0290000NCAM00709_06_095J"
+   }
+  ]
  },
  {
   "id": "threeforks",
@@ -189,7 +339,17 @@
    "muestra": "Recoger tubos"
   },
   "fuente": "https://www.jpl.nasa.gov/news/nasas-perseverance-rover-completes-mars-sample-depot/",
-  "ubicacion": "Perseverance position on sol 665 (M20_traverse.json)"
+  "ubicacion": "Perseverance position on sol 665 (M20_traverse.json)",
+  "fotos": [
+   {
+    "archivo": "fotos/threeforks_1.jpg",
+    "camara": "WATSON",
+    "sol": 653,
+    "credito": "NASA/JPL-Caltech/MSSS",
+    "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00653/ids/edr/browse/shrlc/SI1_0653_0724915744_812ECM_N0320148SRLC08040_0000LMJ01.png",
+    "imagen": "SI1_0653_0724915744_812ECM_N0320148SRLC08040_0000LMJ"
+   }
+  ]
  },
  {
   "id": "belva",
@@ -213,6 +373,32 @@
    "muestra": "No"
   },
   "fuente": "https://www.marsdaily.com/reports/Perseverance_captures_view_of_Mars_Belva_Crater_999.html",
-  "ubicacion": "Perseverance position on sol 772 (M20_traverse.json)"
+  "ubicacion": "Perseverance position on sol 772 (M20_traverse.json)",
+  "fotos": [
+   {
+    "archivo": "fotos/belva_1.jpg",
+    "camara": "Mastcam-Z",
+    "sol": 772,
+    "credito": "NASA/JPL-Caltech/ASU",
+    "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00772/ids/edr/browse/zcam/ZR0_0772_0735486748_193EBY_N0390650ZCAM08789_1100LMJ01.png",
+    "imagen": "ZR0_0772_0735486748_193EBY_N0390650ZCAM08789_1100LMJ"
+   },
+   {
+    "archivo": "fotos/belva_2.jpg",
+    "camara": "Mastcam-Z",
+    "sol": 772,
+    "credito": "NASA/JPL-Caltech/ASU",
+    "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00772/ids/edr/browse/zcam/ZL0_0772_0735486686_193EBY_N0390650ZCAM08789_1100LMJ01.png",
+    "imagen": "ZL0_0772_0735486686_193EBY_N0390650ZCAM08789_1100LMJ"
+   },
+   {
+    "archivo": "fotos/belva_3.jpg",
+    "camara": "Navcam",
+    "sol": 772,
+    "credito": "NASA/JPL-Caltech",
+    "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00772/ids/edr/browse/ncam/NLG_0772_0735488767_816ECM_N0390650NCAM00500_00_2I4J01.png",
+    "imagen": "NLG_0772_0735488767_816ECM_N0390650NCAM00500_00_2I4J"
+   }
+  ]
  }
 ]

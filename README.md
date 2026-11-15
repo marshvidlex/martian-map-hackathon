@@ -301,5 +301,7 @@ The EVA starts from science, not from a random walk. `data/zonas/jezero/ciencia.
 | Read the history of the crater floor | Octavia E. Butler Landing, Rochette (first cores), Brac, Issole |
 | Recover the Three Forks samples | Three Forks Sample Depot (first sample depot on another planet) |
 
+Each science place can show real ground photos taken by Perseverance there (Mastcam-Z colour, WATSON close-ups, Navcam). `scripts/descargar_fotos_rover.py` gets them from the public Mars 2020 raw images API for the sols the rover was at that place, saves them at 800 px in `data/zonas/jezero/fotos/` (so they work offline) and writes them into `poi.json` with camera, sol and credit. They appear in the map popup, in the 3D place card and in the walk view.
+
 In the PLAN step the crew ticks objectives and presses "Add selected objectives to the route": stops are added nearest-first from the habitat. The REVIEW checklist shows how many objectives and targets the route covers.
 

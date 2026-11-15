@@ -426,6 +426,8 @@ body.modo-marte #inicio {
 .crat-leyenda li { display: flex; align-items: center; gap: 8px; }
 .crat-muestra { flex: none; width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid #F4EDE4; }
 .crat-muestra.ruta { border: 2.5px solid var(--aviso); background: rgba(255, 181, 71, 0.15); }
+.crat-muestra.confirmado { border: 2px solid var(--cian); }
+.crat-muestra.foto { border: 1.5px dashed #F4EDE4; }
 .btn-ancho { width: 100%; }
 
 /* lista de crateres en el panel de la mision y en la tarjeta de zona */

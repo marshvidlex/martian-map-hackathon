@@ -108,6 +108,9 @@ async function iniciarCrateres() {
         </div>
         <ul class="crat-leyenda">
           <li><i class="crat-muestra"></i><span data-i18n="crat_ley">${t("crat_ley")}</span></li>
+          ${CRATER.lista.some((c) => c.relieve) ? `
+          <li><i class="crat-muestra confirmado"></i><span data-i18n="crat_ley_conf">${t("crat_ley_conf")}</span></li>
+          <li><i class="crat-muestra foto"></i><span data-i18n="crat_ley_foto">${t("crat_ley_foto")}</span></li>` : ""}
           <li><i class="crat-muestra ruta"></i><span data-i18n="crat_ley_ruta">${t("crat_ley_ruta")}</span></li>
         </ul>
         <button id="btn-explorador" class="btn-sec btn-ancho" data-i18n="exp_abrir">${t("exp_abrir")}</button>
@@ -144,8 +147,11 @@ function dibujarCrateres() {
     if (!cerca && c.d < D_MIN_LEJOS && !enRuta) continue;
     L.circle(craterALatLng(c), {
       radius: c.d / 2, renderer: CRATER.render, pane: "crateres", interactive: false,
-      color: enRuta ? "#FFB547" : "#F4EDE4",
-      weight: enRuta ? 2.5 : 1.2,
+      // confirmado por el relieve (scripts/validar_crateres.py) = linea cian continua;
+      // solo visto en la foto = linea punteada
+      color: enRuta ? "#FFB547" : c.relieve === "confirmado" ? "#4FD1E8" : "#F4EDE4",
+      weight: enRuta ? 2.5 : c.relieve === "confirmado" ? 2 : 1.2,
+      dashArray: c.relieve === "solo_foto" && !enRuta ? "4 4" : null,
       opacity: enRuta ? 1 : 0.35 + 0.6 * c.conf,
       fill: enRuta, fillColor: "#FFB547", fillOpacity: 0.12,
     }).addTo(CRATER.capa);

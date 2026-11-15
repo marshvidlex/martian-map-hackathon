@@ -95,7 +95,7 @@ const TEXTOS = {
     r_distancia: "Distance", r_tiempo: "Total time", r_oxigeno: "Oxygen used", r_dosis: "Dose", r_paradas: "Stops",
     // --- crateres (YOLO) ---
     capa_crateres: "Craters (YOLO detection)", crat_conf: "Min. confidence",
-    crat_ley: "Detected crater (brighter = more confident)", crat_ley_ruta: "Crater on the route",
+    crat_ley: "Detected crater (brighter = more confident)", crat_ley_conf: "Confirmed by elevation (DEM rim test)", crat_ley_foto: "Photo only (too small or too shallow to confirm)", crat_ley_ruta: "Crater on the route",
     crat_ruta_titulo: "CRATERS ON ROUTE", crat_ruta_ninguno: "No craters detected along the route.",
     crat_ruta_resumen: "{n} craters within {m} m of the path.", crat_ruta_dentro: "The path crosses {n} of them.",
     crat_item: "Ø {d} · depth {p} · {c}%", crat_tramo: "leg {n}", crat_titulo: "Crater", crat_cruza: "CROSSES",
@@ -205,7 +205,7 @@ const TEXTOS = {
     r_distancia: "Distancia", r_tiempo: "Tiempo total", r_oxigeno: "Oxígeno usado", r_dosis: "Dosis", r_paradas: "Paradas",
     // --- crateres (YOLO) ---
     capa_crateres: "Cráteres (detección YOLO)", crat_conf: "Confianza mínima",
-    crat_ley: "Cráter detectado (más claro = más seguro)", crat_ley_ruta: "Cráter sobre la ruta",
+    crat_ley: "Cráter detectado (más claro = más seguro)", crat_ley_conf: "Confirmado con la elevación (prueba del borde en el DEM)", crat_ley_foto: "Solo en la foto (muy chico o poco hondo para confirmar)", crat_ley_ruta: "Cráter sobre la ruta",
     crat_ruta_titulo: "CRÁTERES EN LA RUTA", crat_ruta_ninguno: "No se detectaron cráteres sobre la ruta.",
     crat_ruta_resumen: "{n} cráteres a menos de {m} m del camino.", crat_ruta_dentro: "El camino cruza {n} de ellos.",
     crat_item: "Ø {d} · profundidad {p} · {c}%", crat_tramo: "tramo {n}", crat_titulo: "Cráter", crat_cruza: "CRUZA",

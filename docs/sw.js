@@ -2,7 +2,7 @@
 // Estrategia "primero la red": si hay internet trae lo nuevo y lo guarda;
 // si no hay, usa la copia guardada. Asi no te quedas con versiones viejas mientras programas.
 
-const CACHE = "martian-map-v27"; // si cambias la lista de archivos, sube el numero
+const CACHE = "martian-map-v30"; // si cambias la lista de archivos, sube el numero
 // Ojo: en index.html los css/js llevan ?v=NN; subelo junto con este numero para que el navegador no use copias viejas.
 
 const ARCHIVOS = [
@@ -21,6 +21,7 @@ const ARCHIVOS = [
   "js/habitat3d.js",
   "js/replay.js",
   "js/marte.js",
+  "js/fases.js",
   "data/sitios.json",
   "js/vista3d.js",
   "js/casco.js",
@@ -34,10 +35,38 @@ const ARCHIVOS = [
   "lib/leaflet/images/marker-shadow.png",
 ];
 
-// Al instalar: guardamos la app. Los datos de cada zona (data/zonas/...) se guardan
-// la primera vez que se abren, asi que hay que abrir cada zona una vez con internet.
+// Mapa de Marte de la pantalla de inicio (niveles 0 a 3, ~170 mosaicos, ~3 MB): se guarda completo
+// al instalar para que Marte se vea aunque se apague el servidor o no haya internet.
+// El nivel 4 (mas detalle) se guarda solo conforme se va viendo.
+const MOSAICOS_MARTE = [];
+for (let z = 0; z <= 3; z++) {
+  for (let y = 0; y < 2 ** z; y++) {
+    for (let x = 0; x < 2 ** (z + 1); x++) MOSAICOS_MARTE.push(`data/marte/${z}/${y}/${x}.jpg`);
+  }
+}
+// Datos de las zonas que ya vienen en el repo (si alguno no existe, no pasa nada)
+const DATOS_ZONA = ["data/zonas.json"].concat(
+  ["info.json", "cuadricula.json", "foto.png", "elevacion.png", "pendiente.png", "rugosidad.png",
+    "geologia.png", "crateres.json", "aterrizaje.json", "aterrizaje.png", "M20_traverse.json", "poi.json",
+    "hirise/indice.json"].map((a) => `data/zonas/jezero/${a}`));
+
+// Al instalar: guardamos la app, el mapa de Marte y los datos de Jezero.
+// Las fotos HiRISE de cerca se guardan la primera vez que se ven.
 self.addEventListener("install", (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ARCHIVOS)));
+  e.waitUntil(caches.open(CACHE).then((c) => Promise.all([
+    c.addAll(ARCHIVOS),
+    // uno por uno: si falta alguno no se cae toda la instalacion
+    ...MOSAICOS_MARTE.concat(DATOS_ZONA).map((u) => c.add(u).catch(() => null)),
+    // nivel 4 (mas detalle) alrededor de cada sitio de aterrizaje: 3 x 3 mosaicos por sitio
+    fetch("data/sitios.json").then((r) => r.json()).then((sitios) => Promise.all(sitios.flatMap((s) => {
+      const cx = Math.floor(((s.lon + 180) / 360) * 32), cy = Math.floor(((90 - s.lat) / 180) * 16), lista = [];
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        const x = cx + dx, y = cy + dy;
+        if (x >= 0 && x < 32 && y >= 0 && y < 16) lista.push(c.add(`data/marte/4/${y}/${x}.jpg`).catch(() => null));
+      }
+      return lista;
+    }))).catch(() => null),
+  ])));
   self.skipWaiting();
 });
 

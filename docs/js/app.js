@@ -345,6 +345,12 @@ function alTocarMapa(e) {
     return;
   }
 
+  // fase LAND (fases.js): tocar otra vez mueve el habitat en lugar de agregar una parada
+  if (window.faseActual === "land" && paradas.length) {
+    if (window.revisarAterrizaje && !revisarAterrizaje(celda, true)) return; // el nuevo punto no es seguro
+    borrarMision();
+  }
+
   // el habitat es donde aterriza la nave: solo en zonas seguras (aterrizaje.js)
   if (window.revisarAterrizaje && !revisarAterrizaje(celda)) return;
 

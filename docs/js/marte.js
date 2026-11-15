@@ -53,21 +53,26 @@ async function crearMapaMarte() {
   L.control.zoom({ position: "topright" }).addTo(marte.mapa);
   marte.mapa.fitBounds([[-90, -180], [90, 180]]);
 
-  // 1) Mapa guardado dentro de la pagina (scripts/descargar_marte.py), niveles 0 a 4: funciona sin internet.
-  //    Al acercarse mas se sigue viendo, solo que estirado.
-  const local = L.tileLayer("data/marte/{z}/{y}/{x}.jpg", {
-    tileSize: 256, noWrap: true, maxNativeZoom: 4, bounds: [[-90, -180], [90, 180]],
+  // 1) Mapa guardado dentro de la pagina (scripts/cortar_marte.py). Va en dos capas para que nunca
+  //    quede negro, aun sin servidor ni internet:
+  //    - base: niveles 0 a 3 (el service worker los guarda todos al instalar). De cerca se ve estirada.
+  //    - detalle: nivel 4 encima. Si un mosaico de nivel 4 no esta guardado, se ve la base debajo.
+  const caja = [[-90, -180], [90, 180]];
+  const base = L.tileLayer("data/marte/{z}/{y}/{x}.jpg", {
+    tileSize: 256, noWrap: true, maxNativeZoom: 3, bounds: caja,
   }).addTo(marte.mapa);
-  // 2) Encima, el detalle de Mars Trek desde el nivel 5 (si hay internet). Si no hay, se queda el local.
+  L.tileLayer("data/marte/{z}/{y}/{x}.jpg", {
+    tileSize: 256, noWrap: true, minZoom: 4, minNativeZoom: 4, maxNativeZoom: 4, bounds: caja,
+  }).addTo(marte.mapa);
+  // 2) Encima, el detalle de Mars Trek desde el nivel 5 (si hay internet). Si no hay, se queda lo local.
   L.tileLayer(MOSAICO_MARTE, {
-    tileSize: 256, noWrap: true, minZoom: 5, maxNativeZoom: 7, bounds: [[-90, -180], [90, 180]],
+    tileSize: 256, noWrap: true, minZoom: 5, maxNativeZoom: 7, bounds: caja,
   }).addTo(marte.mapa);
-  // si faltan los mosaicos locales (no se corrio el script) se avisa
+  // el aviso solo sale si falta la BASE (no se corrio el script de cortar el mapa)
   const aviso = document.getElementById("marte-sin-red");
   let fallas = 0;
-  local.on("tileerror", () => { if (++fallas > 3) aviso.classList.remove("oculto"); });
-  local.on("tileload", () => aviso.classList.add("oculto"));
-
+  base.on("tileerror", () => { if (++fallas > 3) aviso.classList.remove("oculto"); });
+  base.on("tileload", () => aviso.classList.add("oculto"));
 
   for (const s of marte.sitios) {
     const listo = s.zona && marte.listos.has(s.zona);

@@ -89,8 +89,8 @@ function quitarSeguro() {
 }
 
 // Se llama desde alTocarMapa ANTES de poner el habitat. Regresa false si no se puede aterrizar ahi.
-window.revisarAterrizaje = (celda) => {
-  if (!ATZ.datos || paradas.length) return true;
+window.revisarAterrizaje = (celda, forzar = false) => {
+  if (!ATZ.datos || (paradas.length && !forzar)) return true;
   quitarSeguro();
   const estado = ATZ.datos.estado[celda], bits = ATZ.datos.motivo[celda];
   if (estado === 2) {

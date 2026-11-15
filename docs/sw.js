@@ -2,7 +2,7 @@
 // Estrategia "primero la red": si hay internet trae lo nuevo y lo guarda;
 // si no hay, usa la copia guardada. Asi no te quedas con versiones viejas mientras programas.
 
-const CACHE = "martian-map-v32"; // si cambias la lista de archivos, sube el numero
+const CACHE = "martian-map-v33"; // si cambias la lista de archivos, sube el numero
 // Ojo: en index.html los css/js llevan ?v=NN; subelo junto con este numero para que el navegador no use copias viejas.
 
 const ARCHIVOS = [

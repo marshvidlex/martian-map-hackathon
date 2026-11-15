@@ -18,6 +18,7 @@ async function iniciarCiencia() {
   if (!pois.length) return; // zona sin lugares de ciencia: todo sigue igual
   traducirPois();
   pintarPois();
+  guardarFotosSinInternet();
   if (CIENCIA.objetivos.length) {
     CIENCIA.elegidos.add(CIENCIA.objetivos[0].id); // de inicio, el objetivo principal
     pintarSeccion();
@@ -25,6 +26,16 @@ async function iniciarCiencia() {
 }
 window.iniciarCiencia = iniciarCiencia;
 window.abrirFotoPoi = (p, k = 0) => (p && (p.fotos || []).length ? abrirFotoGrande(p, k) : null);
+
+// Pide todas las fotos de Perseverance una vez: el service worker (sw.js) guarda cada archivo que pasa
+// por el, asi las fotos se siguen viendo aunque se apague el servidor o no haya internet.
+function guardarFotosSinInternet() {
+  const lista = pois.flatMap((p) => (p.fotos || []).map((f) => DATOS + f.archivo));
+  if (!lista.length || !("serviceWorker" in navigator)) return;
+  navigator.serviceWorker.ready.then(() => setTimeout(async () => {
+    for (const u of lista) { try { await fetch(u); } catch { /* sin red: ya estaban guardadas */ } }
+  }, 2500));
+}
 
 // Los textos de cada lugar en el idioma actual (app.js, vista3d.js y casco.js leen que_estudiar)
 function traducirPois() {

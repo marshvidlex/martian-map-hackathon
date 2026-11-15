@@ -8,5 +8,66 @@
   "pendiente_max": 25,
   "rugosidad_max": 1.0,
   "tiene_rugosidad": true,
-  "capas_extra": []
+  "capas_extra": [
+    {
+      "nombre": "geologia",
+      "etiqueta": "Geologic units (USGS SIM 3464)"
+    }
+  ],
+  "geologia": [
+    {
+      "nombre": "Jezero floor unit",
+      "simbolo": "Njf",
+      "color": "#3fae5a",
+      "pct": 42.0,
+      "lon": 77.442,
+      "lat": 18.45781,
+      "letrero": true
+    },
+    {
+      "nombre": "Jezero fan 2 unit",
+      "simbolo": "NHjf2",
+      "color": "#f7d774",
+      "pct": 32.7,
+      "lon": 77.39978,
+      "lat": 18.48136,
+      "letrero": true
+    },
+    {
+      "nombre": "Lower etched unit",
+      "simbolo": "Nle",
+      "color": "#2ec4c4",
+      "pct": 10.9,
+      "lon": 77.4373,
+      "lat": 18.44073,
+      "letrero": true
+    },
+    {
+      "nombre": "Eolian bedform unit",
+      "simbolo": "Aeb",
+      "color": "#b07cd8",
+      "pct": 9.3,
+      "lon": 77.38234,
+      "lat": 18.4377,
+      "letrero": true
+    },
+    {
+      "nombre": "Upper etched unit",
+      "simbolo": "Nue",
+      "color": "#e0524f",
+      "pct": 3.6,
+      "lon": 77.38853,
+      "lat": 18.43621,
+      "letrero": true
+    },
+    {
+      "nombre": "Crater rim unit",
+      "simbolo": "cr",
+      "color": "#8d8d8d",
+      "pct": 1.5,
+      "lon": 77.38305,
+      "lat": 18.47792,
+      "letrero": true
+    }
+  ]
 }

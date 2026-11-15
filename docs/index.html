@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -16,21 +16,21 @@
   <!-- Vista para el visor del casco: solo lo indispensable, letras grandes -->
   <div id="hud">
     <div id="hud-veredicto">--</div>
-    <div id="hud-siguiente">Sin mision</div>
+    <div id="hud-siguiente">No mission</div>
     <div id="hud-datos"></div>
-    <button id="btn-salir-casco">Salir</button>
+    <button id="btn-salir-casco">Exit</button>
   </div>
 
   <!-- Vista 3D: ocupa toda la pantalla cuando se abre -->
   <div id="vista3d">
     <div id="lienzo3d"></div>
     <div id="barra3d">
-      <label>Capa <select id="sel-capa3d"></select></label>
-      <label>Relieve <input type="range" id="rng-exagera" min="1" max="6" step="0.5" value="2.5">
+      <label>Layer <select id="sel-capa3d"></select></label>
+      <label>Relief <input type="range" id="rng-exagera" min="1" max="6" step="0.5" value="2.5">
         <span id="txt-exagera">2.5x</span></label>
-      <button id="btn-recorrer">Recorrer ruta</button>
-      <button id="btn-cerrar3d">Volver al mapa</button>
-      <button id="btn-aprobar3d" class="aprobar-chico">Aprobar mision y salir</button>
+      <button id="btn-recorrer">Fly the route</button>
+      <button id="btn-cerrar3d">Back to map</button>
+      <button id="btn-aprobar3d" class="aprobar-chico">Approve mission and go</button>
     </div>
   </div>
 
@@ -46,110 +46,110 @@
     <div id="hc-iconos">
       <button data-panel="oxigeno">O2</button>
       <button data-panel="distancia">Dist</button>
-      <button data-panel="tiempo">Tiempo</button>
-      <button data-panel="terreno">Terreno</button>
-      <button data-panel="dosis">Dosis</button>
-      <button data-panel="parada">Parada</button>
-      <button data-panel="mapa">Mapa</button>
+      <button data-panel="tiempo">Time</button>
+      <button data-panel="terreno">Terrain</button>
+      <button data-panel="dosis">Dose</button>
+      <button data-panel="parada">Stop</button>
+      <button data-panel="mapa">Map</button>
     </div>
     <div id="hc-paneles"></div>
     <canvas id="hc-mini" class="oculto" width="180" height="180"></canvas>
     <div id="hc-alerta"></div>
     <div id="hc-controles">
-      <button id="hc-pausa">Pausa</button>
+      <button id="hc-pausa">Pause</button>
       <span id="hc-velocidad">
         <button data-x="1">x1</button><button data-x="10">x10</button><button data-x="60">x60</button><button data-x="300">x300</button>
       </span>
-      <button id="hc-frente">Mirar al frente</button>
-      <button id="hc-giro">Giroscopio</button>
-      <button id="hc-salir">Volver a la nave</button>
+      <button id="hc-frente">Look ahead</button>
+      <button id="hc-giro">Gyroscope</button>
+      <button id="hc-salir">Back to the ship</button>
     </div>
     <div id="hc-resumen" class="oculto">
-      <h2>Caminata terminada</h2>
+      <h2>Walk complete</h2>
       <div id="hc-resumen-datos"></div>
-      <button id="hc-volver">Volver a la nave</button>
+      <button id="hc-volver">Back to the ship</button>
     </div>
   </div>
 
   <aside id="panel">
     <h1>Martian Map</h1>
-    <p class="sub"><span id="nombre-zona">Crater Jezero</span> &middot; planeador de Marswalk</p>
+    <p class="sub"><span id="nombre-zona">Jezero Crater</span> &middot; Marswalk planner</p>
 
     <div class="zona">
-      <label for="sel-zona">Zona</label>
+      <label for="sel-zona">Site</label>
       <select id="sel-zona"></select>
     </div>
 
     <section>
-      <h2>Capas</h2>
+      <h2>Layers</h2>
       <div class="capa">
-        <label><input type="checkbox" id="chk-foto" checked> Foto (CTX)</label>
+        <label><input type="checkbox" id="chk-foto" checked> Photo (CTX)</label>
         <input type="range" id="op-foto" min="0" max="1" step="0.1" value="1">
       </div>
       <div class="capa">
-        <label><input type="checkbox" id="chk-elevacion"> Elevacion</label>
+        <label><input type="checkbox" id="chk-elevacion"> Elevation</label>
         <input type="range" id="op-elevacion" min="0" max="1" step="0.1" value="0.6">
       </div>
       <div class="capa">
-        <label><input type="checkbox" id="chk-pendiente"> Pendiente (rojo = bloqueado)</label>
+        <label><input type="checkbox" id="chk-pendiente"> Slope (red = blocked)</label>
         <input type="range" id="op-pendiente" min="0" max="1" step="0.1" value="0.6">
       </div>
       <div class="capa" id="bloque-rugosidad">
-        <label><input type="checkbox" id="chk-rugosidad"> Rugosidad HiRISE (rocas, escalones)</label>
+        <label><input type="checkbox" id="chk-rugosidad"> HiRISE roughness (rocks, ledges)</label>
         <input type="range" id="op-rugosidad" min="0" max="1" step="0.1" value="0.8">
       </div>
       <div id="capas-extra"></div>
     </section>
 
     <section>
-      <h2>Mision</h2>
-      <p id="instruccion">Toca el mapa para poner el <b>habitat</b>.</p>
+      <h2>Mission</h2>
+      <p id="instruccion">Tap the map to place the <b>habitat</b>.</p>
       <div class="botones">
-        <button id="btn-quitar">Quitar ultima parada</button>
-        <button id="btn-borrar">Borrar mision</button>
-        <button id="btn-casco">Modo casco</button>
-        <button id="btn-3d">Mesa 3D</button>
+        <button id="btn-quitar">Remove last stop</button>
+        <button id="btn-borrar">Clear mission</button>
+        <button id="btn-casco">Visor mode</button>
+        <button id="btn-3d">3D table</button>
       </div>
     </section>
 
     <section>
-      <h2>Seguridad</h2>
-      <label class="opcion"><input type="checkbox" id="chk-regreso"> Zona de regreso a pie (si falla el rover)</label>
-      <label class="opcion"><input type="checkbox" id="chk-tormenta"> Simular tormenta solar</label>
+      <h2>Safety</h2>
+      <label class="opcion"><input type="checkbox" id="chk-regreso"> Walk-back zone (if the rover fails)</label>
+      <label class="opcion"><input type="checkbox" id="chk-tormenta"> Simulate solar storm</label>
     </section>
 
     <section id="resultado" class="oculto">
-      <h2>Resultado</h2>
+      <h2>Result</h2>
       <div id="veredicto"></div>
       <p id="motivo"></p>
       <table>
-        <tr><td>Distancia total</td><td id="r-distancia"></td></tr>
-        <tr><td>Tiempo total (con trabajo)</td><td id="r-total"></td></tr>
-        <tr><td>Pendiente maxima</td><td id="r-pendiente"></td></tr>
-        <tr><td>Subida acumulada</td><td id="r-subida"></td></tr>
-        <tr><td>Oxigeno usado</td><td id="r-oxigeno"></td></tr>
-        <tr><td>Dosis de radiacion</td><td id="r-radiacion"></td></tr>
+        <tr><td>Total distance</td><td id="r-distancia"></td></tr>
+        <tr><td>Total time (with work)</td><td id="r-total"></td></tr>
+        <tr><td>Max slope</td><td id="r-pendiente"></td></tr>
+        <tr><td>Total climb</td><td id="r-subida"></td></tr>
+        <tr><td>Oxygen used</td><td id="r-oxigeno"></td></tr>
+        <tr><td>Radiation dose</td><td id="r-radiacion"></td></tr>
       </table>
-      <h2>Tramos</h2>
+      <h2>Legs</h2>
       <ol id="tramos"></ol>
-      <h2>Perfil de elevacion</h2>
+      <h2>Elevation profile</h2>
       <canvas id="perfil" width="290" height="130"></canvas>
-      <button id="btn-aprobar" class="aprobar">Aprobar mision y salir</button>
+      <button id="btn-aprobar" class="aprobar">Approve mission and go</button>
     </section>
 
     <details>
-      <summary>Parametros de la demo</summary>
-      <label>Pendiente maxima (grados) <input type="number" id="p-pendiente" value="25"></label>
-      <label>Rugosidad maxima (m) <input type="number" id="p-rugosidad" value="1" step="0.1"></label>
-      <label>Velocidad en plano (km/h) <input type="number" id="p-velocidad" value="3" step="0.5"></label>
-      <label>Carga extra (kg) <input type="number" id="p-carga" value="20" step="5"></label>
-      <label>Horas de oxigeno en el traje <input type="number" id="p-oxigeno" value="8"></label>
-      <label>Horas de trabajo por parada <input type="number" id="p-trabajo" value="0.5" step="0.25"></label>
-      <label>Reserva de seguridad (%) <input type="number" id="p-reserva" value="20"></label>
-      <label>Radiacion normal (mSv por dia) <input type="number" id="p-radiacion" value="0.67" step="0.01"></label>
-      <label>Multiplicador en tormenta <input type="number" id="p-mult-tormenta" value="50"></label>
-      <label>Limite de dosis por salida (mSv) <input type="number" id="p-limite-dosis" value="1" step="0.1"></label>
-      <p class="nota">Valores de prueba, no son datos oficiales de la NASA.</p>
+      <summary>Demo parameters</summary>
+      <label>Max slope (degrees) <input type="number" id="p-pendiente" value="25"></label>
+      <label>Max roughness (m) <input type="number" id="p-rugosidad" value="1" step="0.1"></label>
+      <label>Speed on flat ground (km/h) <input type="number" id="p-velocidad" value="3" step="0.5"></label>
+      <label>Extra load (kg) <input type="number" id="p-carga" value="20" step="5"></label>
+      <label>Suit oxygen (hours) <input type="number" id="p-oxigeno" value="8"></label>
+      <label>Work time per stop (hours) <input type="number" id="p-trabajo" value="0.5" step="0.25"></label>
+      <label>Safety reserve (%) <input type="number" id="p-reserva" value="20"></label>
+      <label>Normal radiation (mSv per day) <input type="number" id="p-radiacion" value="0.67" step="0.01"></label>
+      <label>Solar storm multiplier <input type="number" id="p-mult-tormenta" value="50"></label>
+      <label>Dose limit per EVA (mSv) <input type="number" id="p-limite-dosis" value="1" step="0.1"></label>
+      <p class="nota">Demo values, not official NASA data.</p>
     </details>
 
     <p id="coordenadas" class="nota"></p>

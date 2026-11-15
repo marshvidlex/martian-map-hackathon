@@ -14,7 +14,7 @@ let ultimaMision = null;
 
 async function cargarJSON(ruta) {
   const resp = await fetch(ruta);
-  if (!resp.ok) throw new Error("No se pudo cargar " + ruta);
+  if (!resp.ok) throw new Error("Could not load " + ruta);
   return resp.json();
 }
 
@@ -83,11 +83,17 @@ async function iniciar() {
   // --- Capas extra (THEMIS, CRISM...): salen de info.json, no hay que tocar el HTML ---
   const contenedor = document.getElementById("capas-extra");
   for (const extra of info.capas_extra || []) {
+    const rango = extra.min !== undefined ? `<span class="nota">(${extra.min} to ${extra.max})</span>` : "";
+    // la capa geologica lleva su leyenda de colores (sale de info.geologia, la hace geologia.py)
+    const leyenda = extra.nombre === "geologia" && info.geologia
+      ? `<div class="leyenda">${info.geologia.map((u) =>
+          `<div><span style="background:${u.color}"></span>${u.nombre}${u.simbolo ? ` (${u.simbolo})` : ""} · ${u.pct}%</div>`).join("")}</div>`
+      : "";
     contenedor.insertAdjacentHTML("beforeend", `
       <div class="capa">
-        <label><input type="checkbox" id="chk-${extra.nombre}"> ${extra.etiqueta}
-          <span class="nota">(${extra.min} a ${extra.max})</span></label>
+        <label><input type="checkbox" id="chk-${extra.nombre}"> ${extra.etiqueta} ${rango}</label>
         <input type="range" id="op-${extra.nombre}" min="0" max="1" step="0.1" value="0.6">
+        ${leyenda}
       </div>`);
     capas[extra.nombre] = L.imageOverlay(`${DATOS}${extra.nombre}.png`, limites);
   }
@@ -112,7 +118,7 @@ async function iniciar() {
     if (p.lat < info.sur || p.lat > info.norte || p.lon < info.oeste || p.lon > info.este) continue;
     const foto = p.foto ? `<br><img src="${p.foto}" width="200" alt="${p.nombre}">` : "";
     L.circleMarker(lonlatAMapa(p.lon, p.lat), { radius: 8, color: "#ffd23f", fillOpacity: 0.8 })
-      .bindPopup(`<b>${p.nombre}</b><br>${p.que_estudiar}<br><i>Detectado por: ${p.instrumento}</i>${foto}`)
+      .bindPopup(`<b>${p.nombre}</b><br>${p.que_estudiar}<br><i>Observed by: ${p.instrumento}</i>${foto}`)
       .on("click", alTocarMapa) // tocar el punto tambien lo agrega a la mision
       .addTo(mapa);
   }
@@ -176,21 +182,21 @@ function nombreParada(k) {
     const [py, px] = lonlatAMapa(p.lon, p.lat);
     if (Math.hypot(px - x, py - y) < 150) return p.nombre;
   }
-  return `Parada ${k}`;
+  return `Stop ${k}`;
 }
 
 // ---------- Interaccion ----------
 function alTocarMapa(e) {
   const celda = mapaACelda(e.latlng);
   if (celda === null) {
-    texto("Ese punto esta fuera de la zona del mapa. Toca dentro del terreno.");
+    texto("That point is outside the map. Tap inside the terrain.");
     return;
   }
 
   const params = leerParametros();
   if (bloqueada(cuad, celda, params)) {
     const p = cuad.pendiente[celda];
-    texto(`Ese punto esta bloqueado (${p < 0 ? "sin datos" : (p / 10).toFixed(0) + " grados"}). Toca otro.`);
+    texto(`That point is blocked (${p < 0 ? "no data" : (p / 10).toFixed(0) + " degrees"}). Pick another one.`);
     return;
   }
 
@@ -204,10 +210,10 @@ function alTocarMapa(e) {
   marcadores.push(L.marker(celdaAMapa(celda), { icon: icono }).addTo(mapa).bindTooltip(nombreParada(k)));
 
   if (k === 0) {
-    texto("Ahora toca la <b>primera parada</b>.");
+    texto("Now tap the <b>first stop</b>.");
     dibujarZonaRegreso();
   } else {
-    texto("Toca otra parada para agregarla, o quita la ultima.");
+    texto("Tap again to add another stop, or remove the last one.");
     calcular();
   }
 }
@@ -245,7 +251,7 @@ function calcular() {
   console.log(`Mision calculada en ${(performance.now() - t0).toFixed(0)} ms`);
 
   if (m.error) {
-    texto(m.error + " Quita la ultima parada o elige otro punto.");
+    texto(m.error + " Remove the last stop or pick another point.");
     document.getElementById("resultado").classList.add("oculto");
     ultimaMision = null;
     actualizarHud();
@@ -283,23 +289,23 @@ function mostrarPanel(m, params) {
 
   const motivos = [];
   if (!m.okOxigeno) {
-    motivos.push(`No alcanza el oxigeno: se necesitan ${horas(m.total)} y hay ${horas(m.disponible)} sin tocar la reserva.`);
-    if (m.alcanzables === 0) motivos.push("Ni la primera parada alcanza. Elige un destino mas cercano.");
-    else if (m.alcanzables === 1) motivos.push("Con este oxigeno solo se puede hacer la parada 1 y regresar.");
-    else motivos.push(`Con este oxigeno se pueden hacer las paradas 1 a ${m.alcanzables} y regresar.`);
+    motivos.push(`Not enough oxygen: the walk needs ${horas(m.total)} and there are ${horas(m.disponible)} without using the reserve.`);
+    if (m.alcanzables === 0) motivos.push("Not even the first stop is reachable. Pick a closer target.");
+    else if (m.alcanzables === 1) motivos.push("With this oxygen only stop 1 can be visited before returning.");
+    else motivos.push(`With this oxygen, stops 1 to ${m.alcanzables} can be visited before returning.`);
   }
   if (!m.okDosis) {
-    motivos.push(`La dosis (${m.dosis.toFixed(2)} mSv) pasa el limite de ${params.limiteDosis} mSv.` +
-      (params.tormenta ? " Hay tormenta solar: mejor quedarse en el habitat." : ""));
+    motivos.push(`The dose (${m.dosis.toFixed(2)} mSv) is over the ${params.limiteDosis} mSv limit.` +
+      (params.tormenta ? " There is a solar storm: stay in the habitat." : ""));
   }
-  if (m.go) motivos.push(`Queda margen: se usa ${m.oxigenoPct.toFixed(0)}% del oxigeno y la reserva queda intacta.`);
+  if (m.go) motivos.push(`Safe margin: ${m.oxigenoPct.toFixed(0)}% of the oxygen is used and the reserve is untouched.`);
   poner("motivo", motivos.join(" "));
 
   poner("r-distancia", `${m.distancia.toFixed(2)} km`);
   poner("r-total", horas(m.total));
-  poner("r-pendiente", `${m.pendienteMax.toFixed(1)} grados`);
+  poner("r-pendiente", `${m.pendienteMax.toFixed(1)} degrees`);
   poner("r-subida", `${Math.round(m.subida)} m`);
-  poner("r-oxigeno", `${m.oxigenoPct.toFixed(0)} % del traje`);
+  poner("r-oxigeno", `${m.oxigenoPct.toFixed(0)} % of the suit`);
   poner("r-radiacion", `${m.dosis.toFixed(3)} mSv`);
 
   const lista = document.getElementById("tramos");
@@ -372,7 +378,7 @@ function dibujarZonaRegreso() {
   ctx.putImageData(img, 0, 0);
   capaRegreso = L.imageOverlay(canvas.toDataURL(), [[0, 0], [info.alto_m, info.ancho_m]], { className: "pixelada" })
     .addTo(mapa);
-  texto(`Verde = desde ahi se regresa a pie en ${horas(horasRegreso)} o menos.`);
+  texto(`Green = you can walk back from there in ${horas(horasRegreso)} or less.`);
 }
 
 function actualizarHud() {
@@ -380,17 +386,17 @@ function actualizarHud() {
   const sig = document.getElementById("hud-siguiente");
   const datos = document.getElementById("hud-datos");
   if (!ultimaMision) {
-    v.textContent = "--"; v.className = ""; sig.textContent = "Sin mision"; datos.textContent = "";
+    v.textContent = "--"; v.className = ""; sig.textContent = "No mission"; datos.textContent = "";
     return;
   }
   const m = ultimaMision, t = m.tramos[0];
   v.textContent = m.go ? "GO" : "NO-GO";
   v.className = m.go ? "go" : "nogo";
-  sig.textContent = `Siguiente: ${nombreParada(1)}`;
+  sig.textContent = `Next: ${nombreParada(1)}`;
   datos.textContent =
     `${t.distancia.toFixed(2)} km  |  ${horas(t.tiempo)}\n` +
-    `Mision: ${horas(m.total)}  |  O2 ${m.oxigenoPct.toFixed(0)}%\n` +
-    `Dosis ${m.dosis.toFixed(2)} mSv`;
+    `Mission: ${horas(m.total)}  |  O2 ${m.oxigenoPct.toFixed(0)}%\n` +
+    `Dose ${m.dosis.toFixed(2)} mSv`;
 }
 
 
@@ -398,7 +404,7 @@ function actualizarHud() {
 function aprobarMision() {
   if (!ultimaMision) return;
   if (!ultimaMision.go) {
-    texto("No se puede aprobar: la mision es NO-GO. Revisa el motivo en el resultado y ajusta las paradas.");
+    texto("Cannot approve: the mission is NO-GO. Check the reason in the result and adjust the stops.");
     document.getElementById("motivo").scrollIntoView({ behavior: "smooth" });
     return;
   }
@@ -421,7 +427,7 @@ function borrarMision() {
   marcadores = []; lineas = []; paradas = []; capaRegreso = null; ultimaMision = null;
   document.getElementById("resultado").classList.add("oculto");
   actualizarHud();
-  texto("Toca el mapa para poner el <b>habitat</b>.");
+  texto("Tap the map to place the <b>habitat</b>.");
 }
 
 
@@ -436,5 +442,5 @@ if ("serviceWorker" in navigator) {
 
 iniciar().catch((err) => {
   console.error(err);
-  alert("Error cargando datos. Abre la pagina con el servidor local (python -m http.server).");
+  alert("Error loading data. Open the page through a local server (python -m http.server).");
 });

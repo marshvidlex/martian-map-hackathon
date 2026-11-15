@@ -11,6 +11,7 @@ let renderer, escena, camara, controles, terreno, grupoMision;
 let zmin = 0;
 let exageracion = 2.5;
 let recorrido = null; // animacion de "recorrer ruta"
+let grupoGeologia = null; // nombres de las unidades geologicas (solo con esa capa)
 
 // ---------- Conversiones: metros del mapa -> coordenadas 3D ----------
 // En 3D: x = este, y = arriba, z = sur (el norte queda hacia -z)
@@ -102,6 +103,22 @@ async function ponerTextura(capa) {
   textura.anisotropy = renderer.capabilities.getMaxAnisotropy();
   terreno.material.map = textura;
   terreno.material.needsUpdate = true;
+  mostrarGeologia(capa === "geologia");
+}
+
+// Nombres de las unidades geologicas flotando sobre el terreno, del color de su unidad
+function mostrarGeologia(visible) {
+  if (grupoGeologia) { escena.remove(grupoGeologia); grupoGeologia = null; }
+  if (!visible || !info.geologia) return;
+  grupoGeologia = new THREE.Group();
+  for (const u of info.geologia) {
+    if (!u.letrero) continue;
+    const [lat, lng] = lonlatAMapa(u.lon, u.lat);
+    const s = letrero(u.nombre, u.color, 120);
+    s.position.copy(a3D(lat, lng, 220));
+    grupoGeologia.add(s);
+  }
+  escena.add(grupoGeologia);
 }
 
 // Letrero que siempre mira a la camara (para H, 1, 2... y puntos de interes)
@@ -176,18 +193,18 @@ function puntosDeLaMision() {
 function iniciarRecorrido() {
   const puntos = puntosDeLaMision();
   if (puntos.length < 2) {
-    alert("Primero arma una mision en el mapa 2D (habitat y al menos una parada).");
+    alert("First plan a mission on the 2D map (habitat and at least one stop).");
     return;
   }
   recorrido = { curva: new THREE.CatmullRomCurve3(puntos), t: 0, duracion: 40 };
   controles.enabled = false;
-  document.getElementById("btn-recorrer").textContent = "Detener";
+  document.getElementById("btn-recorrer").textContent = "Stop";
 }
 
 function detenerRecorrido() {
   recorrido = null;
   controles.enabled = true;
-  document.getElementById("btn-recorrer").textContent = "Recorrer ruta";
+  document.getElementById("btn-recorrer").textContent = "Fly the route";
 }
 
 function pasoRecorrido(dt) {
@@ -251,8 +268,8 @@ function cerrar3D() {
 
 function llenarSelectorCapas() {
   const sel = document.getElementById("sel-capa3d");
-  const opciones = [["foto", "Foto"], ["elevacion", "Elevacion"], ["pendiente", "Pendiente"]];
-  if (info.tiene_rugosidad) opciones.push(["rugosidad", "Rugosidad"]);
+  const opciones = [["foto", "Photo"], ["elevacion", "Elevation"], ["pendiente", "Slope"]];
+  if (info.tiene_rugosidad) opciones.push(["rugosidad", "Roughness"]);
   for (const e of info.capas_extra || []) opciones.push([e.nombre, e.etiqueta]);
   sel.innerHTML = opciones.map(([v, t]) => `<option value="${v}">${t}</option>`).join("");
 }
@@ -266,6 +283,7 @@ document.getElementById("rng-exagera").addEventListener("input", (e) => {
   document.getElementById("txt-exagera").textContent = exageracion + "x";
   actualizarAlturas();
   dibujarMision();
+  if (grupoGeologia) mostrarGeologia(true);
 });
 // Desde la mesa de planeacion tambien se puede aprobar y salir al casco
 document.getElementById("btn-aprobar3d").addEventListener("click", () => {

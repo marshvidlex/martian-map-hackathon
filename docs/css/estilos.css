@@ -206,3 +206,8 @@ body.modo-casco3d #casco {
 .zona label { color: #aaa; font-size: 13px; }
 .zona select { flex: 1; background: #1b1b1b; color: #eee; border: 1px solid #444;
   border-radius: 4px; padding: 5px; font-size: 13px; }
+
+/* ---------- Leyenda de la capa geologica ---------- */
+.leyenda { font-size: 12px; color: #ccc; margin: 4px 0 6px 22px; }
+.leyenda div { display: flex; align-items: center; gap: 6px; margin: 2px 0; }
+.leyenda span { width: 12px; height: 12px; border-radius: 2px; flex: none; }

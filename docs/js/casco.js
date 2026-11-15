@@ -354,7 +354,7 @@ async function alternarGiroscopio() {
     giro = null; btn.classList.remove("activo"); mirarAlFrente();
     return;
   }
-  if (typeof DeviceOrientationEvent === "undefined") { alerta("Este equipo no tiene giroscopio", "info", 3); return; }
+  if (typeof DeviceOrientationEvent === "undefined") { alerta("This device has no gyroscope", "info", 3); return; }
   if (DeviceOrientationEvent.requestPermission) { // iPad / iPhone piden permiso
     try { if ((await DeviceOrientationEvent.requestPermission()) !== "granted") return; } catch { return; }
   }
@@ -367,13 +367,13 @@ async function alternarGiroscopio() {
   };
   window.addEventListener("deviceorientation", giro.fn);
   btn.classList.add("activo");
-  alerta("Giroscopio activo: mueve la tablet para voltear", "info", 3);
+  alerta("Gyroscope on: move the tablet to look around", "info", 3);
 }
 
 // ================= HUD =================
 const $ = (id) => document.getElementById(id);
 const hm = (h) => { const m = Math.round(h * 60); return `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, "0")} min`; };
-const puntoCardinal = (g) => ["N", "NE", "E", "SE", "S", "SO", "O", "NO"][Math.round(g / 45) % 8];
+const puntoCardinal = (g) => ["N", "NE", "E", "SE", "S", "SW", "W", "NW"][Math.round(g / 45) % 8];
 
 // Mensajes temporales (con segundos) o que duran mientras pase algo (sin segundos)
 let alertaHasta = 0;
@@ -429,11 +429,11 @@ function actualizarHud(forzar) {
   const dosis = (sim.t / 24) * params.radiacion * (params.tormenta ? params.multTormenta : 1);
 
   const textos = {
-    oxigeno: `<b>Oxigeno</b> ${Math.max(0, (1 - usado) * 100).toFixed(0)}% · quedan ${hm(Math.max(0, params.oxigeno - sim.t))}`,
-    distancia: `<b>Recorrido</b> ${(p.d / 1000).toFixed(2)} km<br><b>Falta</b> ${((ruta.largo - p.d) / 1000).toFixed(2)} km`,
-    tiempo: `<b>Tiempo</b> ${hm(sim.t)}<br><b>Regreso en</b> ${hm(Math.max(0, ruta.total - sim.t))}`,
-    terreno: `<b>Altitud</b> ${Math.round(zAqui)} m<br><b>Pendiente</b> ${pend >= 0 ? "+" : ""}${pend.toFixed(0)}° ${pend > 1 ? "subida" : pend < -1 ? "bajada" : "plano"}<br><b>Velocidad</b> ${p.velocidad.toFixed(1)} km/h`,
-    dosis: `<b>Dosis</b> ${dosis.toFixed(3)} mSv<br>limite ${params.limiteDosis} mSv`,
+    oxigeno: `<b>Oxygen</b> ${Math.max(0, (1 - usado) * 100).toFixed(0)}% · ${hm(Math.max(0, params.oxigeno - sim.t))} left`,
+    distancia: `<b>Walked</b> ${(p.d / 1000).toFixed(2)} km<br><b>To go</b> ${((ruta.largo - p.d) / 1000).toFixed(2)} km`,
+    tiempo: `<b>Time</b> ${hm(sim.t)}<br><b>Back in</b> ${hm(Math.max(0, ruta.total - sim.t))}`,
+    terreno: `<b>Altitude</b> ${Math.round(zAqui)} m<br><b>Slope</b> ${pend >= 0 ? "+" : ""}${pend.toFixed(0)}° ${pend > 1 ? "uphill" : pend < -1 ? "downhill" : "flat"}<br><b>Speed</b> ${p.velocidad.toFixed(1)} km/h`,
+    dosis: `<b>Dose</b> ${dosis.toFixed(3)} mSv<br>limit ${params.limiteDosis} mSv`,
     parada: textoParada(dest),
   };
   $("hc-paneles").innerHTML = [...activos].filter((n) => textos[n]).map((n) => `<div class="hc-panel">${textos[n]}</div>`).join("");
@@ -441,12 +441,12 @@ function actualizarHud(forzar) {
 
   // Alertas automaticas: salen aunque los paneles esten cerrados
   if (1 - usado < reserva) {
-    alerta("OXIGENO EN RESERVA: regresa al habitat", "peligro"); // lo mas importante va primero
+    alerta("OXYGEN ON RESERVE: return to the habitat", "peligro"); // lo mas importante va primero
   } else if (performance.now() < alertaHasta) {
     // hay un mensaje temporal (por ejemplo "Mision aprobada"): se deja ver
   } else if (p.trabajando > 0) {
     const i = ruta.parada.indexOf(p.trabajando);
-    alerta(`Trabajando en ${ruta.nombres[p.trabajando]} · faltan ${hm(ruta.t[i] - sim.t)}`, "info");
+    alerta(`Working at ${ruta.nombres[p.trabajando]} · ${hm(ruta.t[i] - sim.t)} left`, "info");
   } else {
     const aviso = revisarAdelante(p.d);
     if (aviso) alerta(aviso.texto, aviso.tipo);
@@ -458,7 +458,7 @@ function textoParada(dest) {
   const poi = pois.find((x) => x.nombre === dest.nombre);
   const foto = poi && poi.foto ? `<br><img src="${poi.foto}" alt="${poi.nombre}">` : "";
   const extra = poi ? `<br>${poi.que_estudiar}` : "";
-  return `<b>Siguiente</b> ${dest.nombre}${extra}${foto}`;
+  return `<b>Next</b> ${dest.nombre}${extra}${foto}`;
 }
 
 // Revisa los proximos 60 m: subida fuerte o terreno rugoso
@@ -468,8 +468,8 @@ function revisarAdelante(d) {
     const celda = mapaACelda({ lat: info.alto_m - p.s, lng: p.x });
     if (celda === null) continue;
     const pend = cuad.pendiente[celda] / 10;
-    if (pend > Math.max(15, sim.params.pendienteMax * 0.7)) return { texto: `Pendiente fuerte en ${dd} m (${pend.toFixed(0)}°)`, tipo: "aviso" };
-    if (cuad.rugosidad && cuad.rugosidad[celda] / 100 > sim.params.rugosidadMax * 0.6) return { texto: `Terreno rugoso en ${dd} m`, tipo: "aviso" };
+    if (pend > Math.max(15, sim.params.pendienteMax * 0.7)) return { texto: `Steep slope in ${dd} m (${pend.toFixed(0)}°)`, tipo: "aviso" };
+    if (cuad.rugosidad && cuad.rugosidad[celda] / 100 > sim.params.rugosidadMax * 0.6) return { texto: `Rough terrain in ${dd} m`, tipo: "aviso" };
   }
   return null;
 }
@@ -492,11 +492,11 @@ function mostrarResumen() {
   const params = sim.params;
   const dosis = (ruta.total / 24) * params.radiacion * (params.tormenta ? params.multTormenta : 1);
   $("hc-resumen-datos").innerHTML = `
-    <p>Distancia: <b>${(ruta.largo / 1000).toFixed(2)} km</b></p>
-    <p>Tiempo total: <b>${hm(ruta.total)}</b></p>
-    <p>Oxigeno usado: <b>${(ruta.total / params.oxigeno * 100).toFixed(0)}%</b></p>
-    <p>Dosis: <b>${dosis.toFixed(3)} mSv</b></p>
-    <p>Paradas: <b>${ruta.nombres.slice(1).join(", ")}</b></p>`;
+    <p>Distance: <b>${(ruta.largo / 1000).toFixed(2)} km</b></p>
+    <p>Total time: <b>${hm(ruta.total)}</b></p>
+    <p>Oxygen used: <b>${(ruta.total / params.oxigeno * 100).toFixed(0)}%</b></p>
+    <p>Dose: <b>${dosis.toFixed(3)} mSv</b></p>
+    <p>Stops: <b>${ruta.nombres.slice(1).join(", ")}</b></p>`;
   $("hc-resumen").classList.remove("oculto");
 }
 
@@ -558,10 +558,10 @@ async function abrirCasco(mision, params, nombres, paradas) {
   mirarAlFrente();
   $("hc-resumen").classList.add("oculto");
   document.querySelectorAll("#hc-velocidad button").forEach((b) => b.classList.toggle("activo", b.dataset.x === "60"));
-  $("hc-pausa").textContent = "Pausa";
-  alerta(!indice ? "Mision aprobada (sin HiRISE: terreno CTX)"
-    : indice.conFoto.size ? "Mision aprobada. Saliendo del habitat..."
-    : "Mision aprobada (sin ortofoto HiRISE: foto CTX)", "info", 4);
+  $("hc-pausa").textContent = "Pause";
+  alerta(!indice ? "Mission approved (no HiRISE: CTX terrain)"
+    : indice.conFoto.size ? "Mission approved. Leaving the habitat..."
+    : "Mission approved (no HiRISE photo: CTX photo)", "info", 4);
   reloj.reset();
   renderer.setAnimationLoop(paso);
 }
@@ -581,7 +581,7 @@ $("hc-giro").addEventListener("click", alternarGiroscopio);
 $("hc-pausa").addEventListener("click", () => {
   if (!sim) return;
   sim.pausa = !sim.pausa;
-  $("hc-pausa").textContent = sim.pausa ? "Seguir" : "Pausa";
+  $("hc-pausa").textContent = sim.pausa ? "Resume" : "Pause";
 });
 document.querySelectorAll("#hc-velocidad button").forEach((b) => b.addEventListener("click", () => {
   if (!sim) return;

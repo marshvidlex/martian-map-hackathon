@@ -1,5 +1,11 @@
 [
   {
+    "id": "gale",
+    "nombre": "Cráter Gale",
+    "lat": -4.5895,
+    "lon": 137.4417
+  },
+  {
     "id": "jezero",
     "nombre": "Jezero Crater",
     "lat": 18.46,

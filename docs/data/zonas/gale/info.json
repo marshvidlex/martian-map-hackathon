@@ -1,0 +1,13 @@
+{
+  "nombre": "Cráter Gale",
+  "ancho_m": 6000.0,
+  "alto_m": 6000.0,
+  "oeste": 137.390925379598,
+  "este": 137.492474620402,
+  "sur": -4.640111814574346,
+  "norte": -4.538888185425654,
+  "pendiente_max": 15,
+  "rugosidad_max": 1.0,
+  "tiene_rugosidad": true,
+  "capas_extra": []
+}

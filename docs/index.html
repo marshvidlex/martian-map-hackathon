@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
   <link rel="stylesheet" href="lib/leaflet/leaflet.css">
-  <link rel="stylesheet" href="css/estilos.css?v=35">
+  <link rel="stylesheet" href="css/estilos.css?v=36">
 </head>
 <body>
 
@@ -202,7 +202,7 @@
         <label><span data-i18n="p_trabajo">Work time per stop (hours)</span> <input type="number" id="p-trabajo" value="0.5" step="0.25"></label>
         <label><span data-i18n="p_reserva">Safety reserve (%)</span> <input type="number" id="p-reserva" value="20"></label>
         <label><span data-i18n="p_rad">Normal radiation (mSv per day)</span> <input type="number" id="p-radiacion" value="0.67" step="0.01"></label>
-        <label><span data-i18n="p_tormenta">Solar storm multiplier</span> <input type="number" id="p-mult-tormenta" value="50"></label>
+        <label><span data-i18n="p_tormenta">Solar storm multiplier</span> <input type="number" id="p-mult-tormenta" value="11.6" step="0.1"></label>
         <label><span data-i18n="p_dosis">Dose limit per EVA (mSv)</span> <input type="number" id="p-limite-dosis" value="1" step="0.1"></label>
         <p class="nota" data-i18n="nota_demo">Demo values, not official NASA data.</p>
       </details>
@@ -473,22 +473,22 @@
   </div>
 
   <script src="lib/leaflet/leaflet.js"></script>
-  <script src="js/idioma.js?v=35"></script>
-  <script src="js/ruta.js?v=35"></script>
-  <script src="js/app.js?v=35"></script>
-  <script src="js/crateres.js?v=35"></script>
-  <script src="js/aterrizaje.js?v=35"></script>
-  <script src="js/ciencia.js?v=35"></script>
-  <script src="js/explorador.js?v=35"></script>
-  <script src="js/replay.js?v=35"></script>
-  <script src="js/marte.js?v=35"></script>
-  <script src="js/fases.js?v=35"></script>
+  <script src="js/idioma.js?v=36"></script>
+  <script src="js/ruta.js?v=36"></script>
+  <script src="js/app.js?v=36"></script>
+  <script src="js/crateres.js?v=36"></script>
+  <script src="js/aterrizaje.js?v=36"></script>
+  <script src="js/ciencia.js?v=36"></script>
+  <script src="js/explorador.js?v=36"></script>
+  <script src="js/replay.js?v=36"></script>
+  <script src="js/marte.js?v=36"></script>
+  <script src="js/fases.js?v=36"></script>
 
   <!-- Three.js para la vista 3D (archivos locales, funciona sin internet) -->
   <script type="importmap">
     { "imports": { "three": "./lib/three/three.module.js" } }
   </script>
-  <script type="module" src="js/vista3d.js?v=35"></script>
-  <script type="module" src="js/casco.js?v=35"></script>
+  <script type="module" src="js/vista3d.js?v=36"></script>
+  <script type="module" src="js/casco.js?v=36"></script>
 </body>
 </html>

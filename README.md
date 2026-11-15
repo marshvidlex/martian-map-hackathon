@@ -47,7 +47,8 @@ Reproduce the route check with Node.js: `node scripts/validar_ruta.js jezero` (i
 | Perseverance path and landing spot | Real | NASA/JPL `M20_traverse.json` |
 | Walking speed 3 km/h (Tobler) | Model | Tobler 1993 |
 | Suit oxygen 8 h, 20 % reserve, 30 min per stop, load 20 kg | Demo | Our assumptions |
-| Solar storm ×50, dose limit 1 mSv per EVA | Demo | Our assumptions |
+| Solar storm ×11.6 | Real | Curiosity RAD, 20 May 2024: 8,100 µGy in one day vs ~700 µGy on a normal day (NASA, June 2024) |
+| Dose limit 1 mSv per EVA | Demo | Our assumption |
 
 ---
 
@@ -105,7 +106,7 @@ The terrain is turned into a grid of ~20 × 20 m cells. Each cell keeps its elev
 | Walking speed | Tobler's hiking function: depends on whether you go up or down. Flat ground = 3 km/h, minus 5% for every 10 kg of extra load |
 | Path | A* search over the grid (8 neighbours), minimising **time**, not distance |
 | Oxygen | Walking time + work time at each stop. The suit's safety reserve (20%) can't be used |
-| Radiation | 0.67 mSv per day on the surface (demo value, close to the ~0.64 mSv/day measured by Curiosity's RAD), × 50 during a solar storm, compared with a per-EVA limit |
+| Radiation | 0.67 mSv per day on the surface (demo value, close to the ~0.64 mSv/day measured by Curiosity's RAD), × 11.6 during a solar storm (the 20 May 2024 event measured by RAD: 8,100 µGy vs ~700 µGy on a normal day), compared with a per-EVA limit |
 | Verdict | GO only if oxygen and dose are both fine. If oxygen is short, it says how many stops are reachable |
 
 ---
@@ -267,7 +268,7 @@ These values are **our assumptions for the demo**, not official NASA numbers. Al
 - Speed on flat ground 3 km/h, −5% per 10 kg of load
 - Suit oxygen 8 h with a 20% reserve, 30 min of work per stop
 - Max slope 15°, max roughness 1 m
-- Solar storm multiplier ×50, dose limit 1 mSv per EVA
+- Dose limit 1 mSv per EVA (the storm multiplier ×11.6 is now the real RAD measurement of 20 May 2024)
 
 Limitations:
 - The grid is 20 m, so it plans which zones to cross, not where to put each foot. HiRISE roughness helps to avoid rocky areas.

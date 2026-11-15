@@ -3,3 +3,6 @@ rasterio
 matplotlib
 pillow
 pyshp
+# solo para scripts/crateres.py (deteccion de crateres con YOLO)
+ultralytics
+opencv-python

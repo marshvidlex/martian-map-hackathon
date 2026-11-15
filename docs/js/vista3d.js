@@ -6,6 +6,7 @@
 
 import * as THREE from "three";
 import { OrbitControls } from "../lib/three/OrbitControls.js";
+import { crearHabitat, animarHabitat } from "./habitat3d.js";
 
 let renderer, escena, camara, controles, terreno, grupoMision;
 let zmin = 0;
@@ -14,6 +15,9 @@ let recorrido = null; // animacion de "recorrer ruta"
 let grupoGeologia = null; // nombres de las unidades geologicas (solo con esa capa)
 let vuelo = null;         // animacion de la camara cuando te acercas a un punto
 let lugares = [];         // puntos a los que se puede ir: { nombre, pos }
+let verCrateres = true;   // casilla "Craters" del panel 3D
+let pulso = null;         // anillo animado del crater elegido
+let habitat = null;       // modelo 3D del habitat (se agranda segun la distancia de la camara)
 const DIST_CERCA = 1200;   // metros entre la camara y el punto al acercarse
 
 // ---------- Conversiones: metros del mapa -> coordenadas 3D ----------
@@ -204,6 +208,20 @@ function dibujarMision() {
     }
   }
 
+  dibujarCrateres3D();
+
+  // Habitat en 3D sobre la primera marca, con la esclusa mirando a la primera parada
+  habitat = null;
+  if (paradas.length) {
+    habitat = crearHabitat();
+    habitat.position.copy(celdaA3D(paradas[0], 0));
+    if (paradas.length > 1) {
+      const a = celdaA3D(paradas[0]), b = celdaA3D(paradas[1]);
+      habitat.rotation.y = Math.atan2(b.x - a.x, b.z - a.z); // +z local apunta a la parada
+    }
+    grupoMision.add(habitat);
+  }
+
   lugares = [];
   paradas.forEach((c, k) => {
     const s = letrero(k === 0 ? "H" : String(k), k === 0 ? "#e8794a" : "#00e5ff", 160);
@@ -229,16 +247,86 @@ function dibujarMision() {
     poste.position.copy(a3D(lat, lng, 130));
     grupoMision.add(poste);
   }
+
+  // crateres que toca la ruta: tambien se puede volar a ellos
+  if (verCrateres && window.crateresDeMision) {
+    crateresDeMision(ultimaMision).slice(0, 8).forEach((e, i) => {
+      const [lat, lng] = [info.alto_m - e.c.s, e.c.x];
+      lugares.push({ nombre: `${t("crat_titulo")} ${Math.round(e.c.d)} m · ${t("crat_tramo", { n: e.tramo })}`,
+        pos: a3D(lat, lng, 0), tipo: "crater", titulo: `${t("crat_titulo")} ${Math.round(e.c.d)} m`,
+        celda: mapaACelda({ lat, lng }), crater: e.c, tramo: e.tramo, k: i + 1 });
+    });
+  }
+}
+
+// ---------- Crateres (YOLO) sobre el terreno ----------
+// Todos los anillos van en una sola geometria de segmentos (miles de crateres sin trabarse).
+// Los que toca la ruta van en ambar y un poco mas altos; los demas en blanco tenue.
+function dibujarCrateres3D() {
+  if (!verCrateres || !window.crateresVisibles) return;
+  const lista = crateresVisibles();
+  if (!lista.length) return;
+  const enRuta = new Set((window.crateresDeMision ? crateresDeMision(ultimaMision) : []).map((e) => e.c.id));
+  const pos = [], col = [];
+  const blanco = new THREE.Color("#f4ede4"), ambar = new THREE.Color("#ffb547");
+  for (const c of lista) {
+    const ruta = enRuta.has(c.id);
+    if (c.d < 25 && !ruta) continue; // a escala de mesa no se ven
+    const n = Math.min(64, Math.max(16, Math.round(c.d / 8)));
+    const color = ruta ? ambar : blanco.clone().multiplyScalar(0.45 + 0.55 * c.conf);
+    const alto = ruta ? 8 : 4;
+    let prev = null;
+    for (let k = 0; k <= n; k++) {
+      const a = (k / n) * Math.PI * 2;
+      const p = a3D(info.alto_m - (c.s + Math.sin(a) * c.d / 2), c.x + Math.cos(a) * c.d / 2, alto);
+      if (prev) { pos.push(prev.x, prev.y, prev.z, p.x, p.y, p.z); col.push(color.r, color.g, color.b, color.r, color.g, color.b); }
+      prev = p;
+    }
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute("color", new THREE.Float32BufferAttribute(col, 3));
+  grupoMision.add(new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.9 })));
+}
+
+// De lejos el habitat real (34 m) no se veria: se agranda con la distancia, de 1x a 14x
+function escalarHabitat() {
+  if (!habitat) return;
+  const d = camara.position.distanceTo(habitat.position);
+  const k = THREE.MathUtils.clamp(d / 300, 1, 14);
+  habitat.scale.set(k, k, k);
+  animarHabitat(habitat);
+}
+
+// Anillo que late sobre el crater elegido
+function marcarCrater(c) {
+  if (pulso) { escena.remove(pulso); pulso.geometry.dispose(); pulso = null; }
+  if (!c) return;
+  const geo = new THREE.RingGeometry(0.92, 1, 64);
+  geo.rotateX(-Math.PI / 2);
+  pulso = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: "#F26B3A", transparent: true, side: THREE.DoubleSide, depthTest: false }));
+  pulso.renderOrder = 9;
+  pulso.position.copy(a3D(info.alto_m - c.s, c.x, 25));
+  pulso.userData.r = c.d / 2;
+  escena.add(pulso);
+}
+function animarPulso() {
+  if (!pulso) return;
+  const k = (performance.now() % 1400) / 1400;
+  const r = pulso.userData.r * (1 + 0.6 * k);
+  pulso.scale.set(r, 1, r);
+  pulso.material.opacity = 1 - k;
 }
 
 // Selector "Go to": vista completa + habitat, paradas y puntos de interes
 function llenarSelectorLugares() {
   const caja = document.getElementById("lugares3d");
-  const color = (l) => (l.tipo === "habitat" ? "#F26B3A" : l.tipo === "poi" ? "#FFD23F" : "#4FD1E8");
+  const color = (l) => (l.tipo === "habitat" ? "#F26B3A" : l.tipo === "poi" ? "#FFD23F" : l.tipo === "crater" ? "#FFB547" : "#4FD1E8");
   caja.innerHTML = `<button data-i="-1"><span class="bolita"></span>${t("todo_sitio")}</button>` +
     lugares.map((l, i) => `<button data-i="${i}"><span class="bolita" style="background:${color(l)}"></span>${l.nombre}</button>`).join("");
   caja.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => irALugar(parseInt(b.dataset.i, 10))));
   document.getElementById("ficha3d").classList.add("oculto");
+  marcarCrater(null);
 }
 
 // ---------- Acercarse a un punto ----------
@@ -271,8 +359,10 @@ function irALugar(i) {
     const v = vistaCompleta();
     iniciarVuelo(v.camara, v.objetivo);
   } else if (lugares[i]) {
-    volarA(lugares[i].pos);
+    const l = lugares[i];
+    volarA(l.pos, l.crater ? Math.max(500, l.crater.d * 3.5) : DIST_CERCA);
   }
+  marcarCrater(lugares[i] && lugares[i].crater);
 }
 
 // Toque corto en un letrero = ir a ese punto. Doble clic en el terreno = acercarse ahi.
@@ -316,13 +406,14 @@ function mostrarFicha(i) {
   const poner = (id, v) => (document.getElementById(id).textContent = v);
 
   const num = document.getElementById("ficha-num");
-  num.textContent = l.tipo === "habitat" ? "H" : l.tipo === "poi" ? "★" : String(l.k);
-  num.className = "insignia" + (l.tipo === "habitat" ? " habitat" : l.tipo === "poi" ? " poi" : "");
+  num.textContent = l.tipo === "habitat" ? "H" : l.tipo === "poi" ? "★" : l.tipo === "crater" ? "◯" : String(l.k);
+  num.className = "insignia" + (l.tipo === "habitat" ? " habitat" : l.tipo === "poi" ? " poi" : l.tipo === "crater" ? " crater" : "");
   poner("ficha-nombre", l.titulo);
 
   // coordenadas, altura y pendiente desde la cuadricula
   let lon, lat;
   if (l.poi) { lon = l.poi.lon; lat = l.poi.lat; }
+  else if (l.crater) { lon = l.crater.lon; lat = l.crater.lat; }
   else { const [la, ln] = celdaAMapa(l.celda); [lon, lat] = mapaALonlat({ lat: la, lng: ln }); }
   poner("ficha-coord", `${lat.toFixed(4)} N · ${lon.toFixed(4)} E`);
   const z = l.celda !== null && l.celda !== undefined ? cuad.elevacion[l.celda] : -99999;
@@ -344,7 +435,8 @@ function mostrarFicha(i) {
   const caja = document.getElementById("ficha-unidad");
   caja.innerHTML = unidad ? `<span style="background:${unidad.color}"></span>${unidad.nombre}${unidad.simbolo ? ` (${unidad.simbolo})` : ""}` : "";
 
-  poner("ficha-texto", l.poi && l.poi.que_estudiar ? l.poi.que_estudiar : "");
+  poner("ficha-texto", l.poi && l.poi.que_estudiar ? l.poi.que_estudiar
+    : l.crater ? `${fmtCrater(l.crater)} · ${t("crat_tramo", { n: l.tramo })} · YOLO` : "");
 }
 
 // Lee el color de geologia.png en ese punto y lo compara con la leyenda
@@ -454,6 +546,7 @@ async function abrir3D() {
   dibujarMision();
   llenarSelectorLugares();
   document.getElementById("leyenda-rover").classList.toggle("oculto", !(window.recorridoRover || []).length);
+  document.getElementById("leyenda-crateres").classList.toggle("oculto", !(window.CRATER && CRATER.lista.length));
   reloj.reset();
   renderer.setAnimationLoop(() => {
     reloj.update();
@@ -462,6 +555,8 @@ async function abrir3D() {
       if (vuelo) pasoVuelo();
       controles.update();
     }
+    animarPulso();
+    escalarHabitat();
     renderer.render(escena, camara);
   });
 }
@@ -485,6 +580,18 @@ function llenarSelectorCapas() {
     ponerTextura(b.dataset.capa);
   }));
   caja.querySelector('[data-capa="foto"]').classList.add("activo");
+
+  // casilla de crateres (solo si la zona tiene crateres.json)
+  if (window.CRATER && CRATER.lista.length) {
+    caja.insertAdjacentHTML("afterend", `<label class="opcion opcion3d"><input type="checkbox" id="chk-crateres3d" checked>
+      <span data-i18n="crat_3d">${t("crat_3d")}</span></label>`);
+    document.getElementById("chk-crateres3d").addEventListener("change", (e) => {
+      verCrateres = e.target.checked;
+      if (!verCrateres) marcarCrater(null);
+      dibujarMision();
+      llenarSelectorLugares();
+    });
+  }
 }
 
 // ---------- Botones ----------
@@ -512,6 +619,21 @@ document.getElementById("ficha-ant").addEventListener("click", () => {
 });
 document.getElementById("ficha-sig").addEventListener("click", () => {
   if (lugares.length) irALugar((lugarActual + 1) % lugares.length);
+});
+
+// Desde el explorador de crateres: abrir la Mesa 3D y volar al crater
+window.verCrater3D = async (c) => {
+  await abrir3D();
+  const pos = a3D(info.alto_m - c.s, c.x, 0);
+  volarA(pos, Math.max(400, c.d * 3.5));
+  marcarCrater(c);
+};
+
+// Cambio en el filtro de confianza de los crateres (crateres.js)
+window.addEventListener("crateres", () => {
+  if (!renderer) return;
+  dibujarMision();
+  llenarSelectorLugares();
 });
 
 // Al cambiar de idioma: letreros 3D, lista "Go to" y ficha

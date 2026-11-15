@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
   <link rel="stylesheet" href="lib/leaflet/leaflet.css">
-  <link rel="stylesheet" href="css/estilos.css?v=21">
+  <link rel="stylesheet" href="css/estilos.css?v=22">
 </head>
 <body>
 
@@ -59,6 +59,9 @@
     </div>
   </div>
 
+  <!-- Fundido al descender a un sitio (marte.js) -->
+  <div id="velo-descenso" aria-live="polite"><div class="velo-mira"></div><p id="velo-texto"></p></div>
+
   <!-- ================= Barra superior ================= -->
   <header id="barra">
     <div class="marca-app">
@@ -71,6 +74,7 @@
     <nav class="modos" aria-label="Modes">
       <button id="btn-marte" data-i18n="modo_marte">Mars</button>
       <button class="activo" aria-current="page" data-i18n="modo_plan">Plan</button>
+      <button id="btn-explorar-crateres" class="oculto" data-i18n="modo_crateres">Craters</button>
       <button id="btn-3d" data-i18n="modo_3d">3D table</button>
       <button data-click="btn-aprobar" data-i18n="modo_visor">Visor</button>
     </nav>
@@ -171,6 +175,12 @@
           <ol id="tramos"></ol>
         </section>
 
+        <section id="crateres-ruta" class="oculto">
+          <h2 data-i18n="crat_ruta_titulo">CRATERS ON ROUTE</h2>
+          <p id="crat-ruta-resumen" class="nota"></p>
+          <ol id="crat-ruta-lista" class="lista-crateres"></ol>
+        </section>
+
         <section>
           <h2 data-i18n="perfil">ELEVATION PROFILE</h2>
           <canvas id="perfil" width="380" height="110"></canvas>
@@ -259,6 +269,7 @@
       <div><span class="muestra ida"></span><span data-i18n="ley_ida">Outbound route</span></div>
       <div><span class="muestra regreso"></span><span data-i18n="ley_reg">Return route</span></div>
       <div id="leyenda-rover"><span class="muestra rover"></span><span data-i18n="ley_rover">Perseverance real traverse</span></div>
+      <div id="leyenda-crateres" class="oculto"><span class="muestra crater"></span><span data-i18n="crat_ley_ruta">Crater on the route</span></div>
       <div class="tenue" data-i18n="ley_geo">Geology: USGS SIM 3464 (Sun &amp; Stack, 2020)</div>
     </section>
 
@@ -269,6 +280,127 @@
       <span id="estado3d" class="chip" data-i18n="sin_mision_chip">NO MISSION</span>
       <button id="btn-aprobar3d" class="btn-principal" data-i18n="aprobar_corto">APPROVE &amp; SUIT UP</button>
     </footer>
+  </div>
+
+  <!-- ================= Explorador de crateres (explorador.js) ================= -->
+  <div id="explorador">
+    <header class="barra-exp">
+      <div class="marca-app">
+        <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="13" fill="none" stroke="#F26B3A" stroke-width="2"/><circle cx="15" cy="15" r="6" fill="none" stroke="#FFB547" stroke-width="2" stroke-dasharray="3 2"/></svg>
+        <div>
+          <div class="marca-titulo" data-i18n="exp_titulo">CRATER EXPLORER</div>
+          <div class="marca-sub" data-i18n="exp_sub">YOLOv8 · CTX + HiRISE · DEM-validated</div>
+        </div>
+      </div>
+      <nav class="modos" aria-label="Modes">
+        <button data-click="btn-exp-cerrar" data-i18n="modo_plan">Plan</button>
+        <button class="activo" aria-current="page" data-i18n="modo_crateres">Craters</button>
+        <button id="btn-exp-3d" data-i18n="modo_3d">3D table</button>
+      </nav>
+      <span class="espacio"></span>
+      <div class="idiomas" role="group" aria-label="Language / Idioma"><button data-idioma="en">EN</button><button data-idioma="es">ES</button></div>
+      <button id="btn-exp-cerrar" class="btn-sec" data-i18n="volver_plan">&larr; Back to plan</button>
+    </header>
+
+    <div class="exp-cuerpo">
+      <!-- Menu: estadisticas, histograma, filtros y lista -->
+      <aside id="exp-menu" aria-label="Crater list">
+        <section class="exp-stats">
+          <div class="exp-stat grande"><span class="etiqueta" data-i18n="exp_mostrando">SHOWING</span><b id="exp-total" class="mono">0</b><small id="exp-total-de" class="tenue"></small></div>
+          <div class="exp-stat"><span class="etiqueta" data-i18n="exp_mayor">LARGEST</span><b id="exp-mayor" class="mono">--</b></div>
+          <div class="exp-stat"><span class="etiqueta" data-i18n="exp_prof_media">MEAN DEPTH</span><b id="exp-prof" class="mono">--</b></div>
+          <div class="exp-stat"><span class="etiqueta" data-i18n="zona_densidad">DENSITY</span><b id="exp-dens" class="mono">--</b></div>
+          <div class="exp-stat"><span class="etiqueta" data-i18n="exp_en_ruta_t">ON ROUTE</span><b id="exp-enruta" class="mono">--</b></div>
+        </section>
+
+        <section>
+          <h2 data-i18n="exp_histo">SIZE DISTRIBUTION</h2>
+          <canvas id="exp-histo" aria-label="Crater size histogram"></canvas>
+          <p class="nota" data-i18n="exp_histo_nota">Tap a bar to filter that size. Grey = all craters.</p>
+        </section>
+
+        <section class="exp-filtros">
+          <h2 data-i18n="exp_filtros">FILTERS</h2>
+          <input id="exp-buscar" type="search" inputmode="numeric" placeholder="#ID" aria-label="Search crater ID">
+          <label class="exp-rango"><span data-i18n="crat_conf">Min. confidence</span><span id="exp-conf-txt" class="dato"></span>
+            <input type="range" id="exp-conf" min="0.25" max="0.95" step="0.05" value="0.4"></label>
+          <div class="exp-rango"><span data-i18n="exp_diam">Diameter</span><span id="exp-d-txt" class="dato"></span>
+            <div class="doble-rango">
+              <input type="range" id="exp-dmin" min="0" max="100" step="0.5" value="0" aria-label="Min diameter">
+              <input type="range" id="exp-dmax" min="0" max="100" step="0.5" value="100" aria-label="Max diameter">
+            </div></div>
+          <div class="exp-chips">
+            <label><input type="checkbox" id="exp-ctx" checked> CTX</label>
+            <label><input type="checkbox" id="exp-hirise" checked> HiRISE</label>
+            <label><input type="checkbox" id="exp-ruta"> <span data-i18n="exp_solo_ruta">Only on route</span></label>
+          </div>
+          <div class="exp-orden">
+            <label for="exp-orden" class="tenue" data-i18n="exp_orden">Sort by</label>
+            <select id="exp-orden">
+              <option value="conf" data-i18n="exp_o_conf">Confidence</option>
+              <option value="diam" data-i18n="exp_o_diam">Largest first</option>
+              <option value="diam_asc" data-i18n="exp_o_diam_asc">Smallest first</option>
+              <option value="prof" data-i18n="exp_o_prof">Deepest first</option>
+              <option value="relacion" data-i18n="exp_o_rel">Freshest (depth/diameter)</option>
+              <option value="habitat" data-i18n="exp_o_hab">Closest to habitat</option>
+              <option value="id" data-i18n="exp_o_id">ID</option>
+            </select>
+            <button id="exp-limpiar" class="btn-sec" data-i18n="exp_limpiar">Reset</button>
+          </div>
+        </section>
+
+        <ol id="exp-lista" class="exp-lista"></ol>
+        <button id="exp-mas" class="btn-sec btn-ancho oculto"></button>
+      </aside>
+
+      <!-- Mapa interactivo de detalle -->
+      <main id="exp-zona-mapa">
+        <div id="exp-mapa"></div>
+        <div class="flotante arriba-izq exp-colores-caja">
+          <span class="etiqueta" data-i18n="exp_color">COLOR BY</span>
+          <div id="exp-colores" class="exp-seg" role="group">
+            <button data-color="diametro" class="activo" data-i18n="exp_diam">Diameter</button>
+            <button data-color="confianza" data-i18n="exp_conf_l">Confidence</button>
+            <button data-color="profundidad" data-i18n="exp_relacion">Depth/diameter</button>
+          </div>
+          <div id="exp-leyenda" class="exp-leyenda"></div>
+        </div>
+        <div id="exp-coord" class="flotante abajo-der mono" data-i18n="mueve">Move over the map</div>
+      </main>
+
+      <!-- Ficha del crater elegido -->
+      <aside id="exp-ficha" class="vacia" aria-live="polite">
+        <div class="exp-ficha-vacia">
+          <svg width="56" height="56" viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="28" r="24" fill="none" stroke="#2B3548" stroke-width="2" stroke-dasharray="5 4"/><circle cx="28" cy="28" r="3" fill="#4FD1E8"/></svg>
+          <p data-i18n="exp_elige">Pick a crater on the map or in the list.</p>
+          <p class="nota" data-i18n="exp_teclas">Keys: ↑ ↓ to move, Esc to close.</p>
+        </div>
+        <div class="exp-ficha-contenido">
+          <div class="ficha-titulo">
+            <span class="insignia crater">◯</span>
+            <div><h3 id="exp-f-titulo"></h3><div id="exp-f-sub" class="mono tenue pequeno"></div></div>
+          </div>
+          <span id="exp-f-ruta" class="chip chico aviso oculto" data-i18n="crat_ley_ruta">Crater on the route</span>
+          <canvas id="exp-f-foto" aria-label="Crater image"></canvas>
+          <h2 data-i18n="exp_perfil">CROSS-SECTION (W–E)</h2>
+          <canvas id="exp-f-perfil" aria-label="Crater elevation profile"></canvas>
+          <div id="exp-f-unidad" class="ficha-unidad"></div>
+          <div id="exp-f-datos" class="ficha-datos mono"></div>
+          <p id="exp-f-aviso" class="nota aviso-txt oculto"></p>
+          <div class="exp-acciones">
+            <button id="exp-parada" class="btn-principal" data-i18n="exp_parada">ADD AS STOP</button>
+            <div class="fila-botones">
+              <button id="exp-3d" class="btn-sec" data-i18n="exp_ver3d">View in 3D</button>
+              <button id="exp-planeador" class="btn-sec" data-i18n="exp_ver_plan">Show in planner</button>
+            </div>
+            <div class="fila-botones">
+              <button id="exp-ant" class="btn-sec" data-i18n="f_ant">Previous</button>
+              <button id="exp-sig" class="btn-sec" data-i18n="exp_sig">Next</button>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
   </div>
 
   <!-- ================= Casco: primera persona ================= -->
@@ -330,17 +462,19 @@
   </div>
 
   <script src="lib/leaflet/leaflet.js"></script>
-  <script src="js/idioma.js?v=21"></script>
-  <script src="js/ruta.js?v=21"></script>
-  <script src="js/app.js?v=21"></script>
-  <script src="js/replay.js?v=21"></script>
-  <script src="js/marte.js?v=21"></script>
+  <script src="js/idioma.js?v=22"></script>
+  <script src="js/ruta.js?v=22"></script>
+  <script src="js/app.js?v=22"></script>
+  <script src="js/crateres.js?v=22"></script>
+  <script src="js/explorador.js?v=22"></script>
+  <script src="js/replay.js?v=22"></script>
+  <script src="js/marte.js?v=22"></script>
 
   <!-- Three.js para la vista 3D (archivos locales, funciona sin internet) -->
   <script type="importmap">
     { "imports": { "three": "./lib/three/three.module.js" } }
   </script>
-  <script type="module" src="js/vista3d.js?v=21"></script>
-  <script type="module" src="js/casco.js?v=21"></script>
+  <script type="module" src="js/vista3d.js?v=22"></script>
+  <script type="module" src="js/casco.js?v=22"></script>
 </body>
 </html>

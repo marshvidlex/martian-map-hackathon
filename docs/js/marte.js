@@ -14,6 +14,8 @@ const marte = {
   listos: new Set(), // zonas con datos (de data/zonas.json)
   marcas: {},
   elegido: null,
+  pulso: null,    // marca animada del sitio elegido
+  cuadros: {},    // cuadro de 6 km de cada zona lista
 };
 
 async function abrirMarte() {
@@ -80,8 +82,8 @@ async function crearMapaMarte() {
     if (listo) {
       const dlat = 3000 / (Math.PI * 3396190 / 180);
       const dlon = dlat / Math.cos((s.lat * Math.PI) / 180);
-      L.rectangle([[s.lat - dlat, s.lon - dlon], [s.lat + dlat, s.lon + dlon]],
-        { color: "#F26B3A", weight: 2, fill: false, interactive: false }).addTo(marte.mapa);
+      marte.cuadros[s.id] = L.rectangle([[s.lat - dlat, s.lon - dlon], [s.lat + dlat, s.lon + dlon]],
+        { color: "#F26B3A", weight: 2, fill: false, interactive: false, className: "cuadro-zona" }).addTo(marte.mapa);
     }
   }
   llenarListaSitios();
@@ -114,6 +116,12 @@ function elegirSitio(id, volar) {
   for (const [k, m] of Object.entries(marte.marcas)) m.setStyle({ weight: k === id ? 4 : 2 });
   if (volar) marte.volo = true;
   if (volar) marte.mapa.flyTo([s.lat, s.lon], 6, { duration: 1.4 });
+  // marca que late sobre el sitio elegido y el cuadro de la zona que se "dibuja"
+  if (marte.pulso) marte.pulso.remove();
+  marte.pulso = L.marker([s.lat, s.lon], { interactive: false, keyboard: false,
+    icon: L.divIcon({ className: "pulso-sitio", html: "<span></span><span></span><span></span>", iconSize: [80, 80] }) }).addTo(marte.mapa);
+  const cuadro = marte.cuadros[id] && marte.cuadros[id].getElement();
+  if (cuadro) { cuadro.classList.remove("dibuja"); void cuadro.getBoundingClientRect(); cuadro.classList.add("dibuja"); }
 
   const listo = s.zona && marte.listos.has(s.zona);
   const lat = `${Math.abs(s.lat).toFixed(2)}° ${s.lat >= 0 ? "N" : "S"}`;
@@ -133,15 +141,47 @@ function elegirSitio(id, volar) {
 }
 
 // Entrar a planear: si es la zona que ya esta abierta solo se cierra la pantalla; si no, se recarga con esa zona
+// Animacion de entrada: la camara desciende hasta el cuadro de la zona, la pantalla se funde con
+// "Descendiendo a ..." y el planeador aparece acercandose desde lejos.
+let descendiendo = false;
 function entrarSitio(zona) {
+  if (descendiendo) return;
   const actual = new URLSearchParams(location.search).get("zona");
   const abierta = (window.DATOS || "").includes(`/zonas/${zona}/`);
-  if (abierta) {
-    if (!actual) history.replaceState(null, "", "?zona=" + encodeURIComponent(zona));
-    cerrarMarte();
-    return;
-  }
-  location.search = "?zona=" + encodeURIComponent(zona);
+  const s = marte.sitios.find((x) => x.zona === zona);
+  const seguir = () => {
+    if (abierta) {
+      if (!actual) history.replaceState(null, "", "?zona=" + encodeURIComponent(zona));
+      cerrarMarte();
+      acercarPlaneador();
+      setTimeout(() => { velo.classList.remove("visible"); descendiendo = false; }, 150);
+      return;
+    }
+    try { sessionStorage.setItem("mm-descenso", "1"); } catch { /* sin almacenamiento */ }
+    location.search = "?zona=" + encodeURIComponent(zona);
+  };
+  const velo = document.getElementById("velo-descenso");
+  const sinAnimacion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (!s || !marte.mapa || sinAnimacion) { seguir(); return; }
+  descendiendo = true;
+  document.getElementById("velo-texto").textContent = t("m_descenso", { sitio: s.nombre });
+  const cuadro = marte.cuadros[s.id];
+  if (cuadro) marte.mapa.flyToBounds(cuadro.getBounds(), { duration: 1.6, padding: [40, 40] });
+  else marte.mapa.flyTo([s.lat, s.lon], 9, { duration: 1.6 });
+  setTimeout(() => velo.classList.add("visible"), 1100);   // fundido a la mitad del descenso
+  setTimeout(seguir, 1900);
+}
+
+// El mapa del planeador entra acercandose a la zona completa
+function acercarPlaneador() {
+  if (typeof mapa === "undefined" || !mapa || typeof info === "undefined" || !info) return;
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const limites = [[0, 0], [info.alto_m, info.ancho_m]];
+  mapa.invalidateSize();
+  mapa.fitBounds(limites, { animate: false });
+  const destino = mapa.getZoom();
+  mapa.setView(mapa.getCenter(), destino - 2.5, { animate: false });
+  mapa.flyTo(mapa.getCenter(), destino, { duration: 1.3 });
 }
 
 document.getElementById("btn-marte").addEventListener("click", abrirMarte);
@@ -151,6 +191,19 @@ window.addEventListener("idioma", () => {
   llenarListaSitios();
   if (marte.elegido) elegirSitio(marte.elegido, false);
 });
+
+// Si se llego por una recarga desde el descenso, el planeador tambien entra acercandose
+// (se espera a que app.js termine de cargar la zona)
+let vieneDeDescenso = false;
+try { vieneDeDescenso = !!sessionStorage.getItem("mm-descenso"); sessionStorage.removeItem("mm-descenso"); } catch { /* sin almacenamiento */ }
+if (vieneDeDescenso) {
+  let intentos = 0;
+  const esperar = () => {
+    if (typeof mapa !== "undefined" && mapa && typeof info !== "undefined" && info) acercarPlaneador();
+    else if (intentos++ < 40) setTimeout(esperar, 100);
+  };
+  esperar();
+}
 
 // Al abrir la pagina sin una zona elegida, se empieza en el mapa de Marte
 if (!new URLSearchParams(location.search).get("zona")) abrirMarte();

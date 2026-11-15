@@ -20,6 +20,9 @@ Built for the NASA Space Apps Challenge 2026 (Querétaro, Mexico).
   - a timeline with the arrival time at each stop (T+)
   - an elevation profile
   - a **GO / NO-GO** verdict and the reason
+- **Craters detected with YOLO**: a crater layer with a confidence filter, the craters the route crosses highlighted in amber and listed in the mission panel (size, depth, leg).
+- **Crater explorer** ("Craters" mode): a detail map with every detected crater (colour by diameter, confidence or depth/diameter), stats, a size-frequency histogram you can tap to filter, filters (ID, confidence, diameter range, CTX/HiRISE, only on route), sorting and a list with HiRISE thumbnails. Each crater has a card with the HiRISE crop, a W–E cross-section from the HiRISE DTM, depth, freshness, geologic unit and actions: add as stop, view in 3D, show in planner.
+- **Select zone**: drag a rectangle on the map; the map flies to it, its craters pop in one by one and a card shows area, crater count, density and mean slope.
 - Safety layers: **walk-back zone** (where you can still walk home if the rover fails) and a **solar storm** scenario.
 
 ### 2. 3D table
@@ -28,11 +31,14 @@ Built for the NASA Space Apps Challenge 2026 (Querétaro, Mexico).
 - "Go to" list: fly to the habitat, any stop or any point of interest. Double-click the ground to zoom in.
 - Each place shows a card with its coordinates, elevation, slope, arrival time and geologic unit.
 - "Fly the route" moves the camera along the planned path like a drone.
+- 3D habitat (dome, airlock, lab module, solar panels, antenna, pressurised rover) at the habitat point, facing the first stop.
+- Detected craters drawn as rings on the terrain; the ones on the route appear in the "Go to" list with a pulsing ring.
 
 ### 3. Visor (first person EVA)
 - Walk the approved mission at eye height (1.70 m), with HiRISE terrain near you and CTX terrain in the distance.
 - HUD: heading, next stop, suit O₂ ring, mission time, distance, dose and time to get back.
-- Automatic alerts: oxygen on reserve, steep slope ahead, rough terrain ahead, working at a stop.
+- Automatic alerts: oxygen on reserve, steep slope ahead, rough terrain ahead, crater rim ahead, working at a stop.
+- Crater rims drawn on the ground around you (amber = on your route) and on the minimap. You leave through the airlock of a full-size habitat.
 - Speed x1 to x300, gyroscope on tablets, minimap.
 - **Replay Perseverance mission:** drive the real NASA/JPL traverse of the rover from Mastcam-Z height, with sol and Earth date.
 
@@ -136,6 +142,26 @@ pip install -r requirements.txt
    python scripts/geologia.py --zona <site> --shp path/to/GeoUnits.shp
    ```
 5. Optional, rover traverse: copy `M20_traverse.json` into `docs/data/zonas/<site>/`.
+6. Optional, craters: put the YOLO weights in `docs/data/zonas/<site>/crater_data/best.pt` and run
+   ```bash
+   python scripts/crateres.py --zona <site>
+   ```
+   It writes `crateres.json` (about 8 min for Jezero on an Apple M-series GPU; it uses CUDA, MPS or CPU).
+   Add `--cache crudos.json` to keep the raw detections; then `--cache crudos.json --reusar` re-runs only the filters in seconds.
+
+### How the crater detection is made more accurate
+
+The model is a YOLOv8n with one class (`Crater`) trained at 640 px. Run as-is on our images it missed the small craters and marked dune troughs and bright mesas. `crateres.py` adds:
+
+| Step | Why |
+|---|---|
+| Two sources: CTX (~6 m/px) for craters of 40 m–1.3 km, HiRISE (~0.5 m/px) for 3–150 m | Each crater is seen at a resolution where it is 20–300 px |
+| Sliced inference (overlapping windows resized to 640 px) at 3 scales | Small craters reach the size the model was trained on |
+| CLAHE contrast and test-time augmentation; each pass is a vote | Mars photos have low contrast; more independent votes = more confidence |
+| Shape filters: round boxes only, boxes cut by a window edge dropped | Removes elongated features and half craters |
+| Box fusion in metres across windows, scales and sources | One crater = one record, centre and size averaged by confidence |
+| Texture check (structure-tensor coherence around the crater) | Dune fields and ridges are strongly oriented; real cratered ground is not |
+| Relief check on the HiRISE DEM (2 m): regional slope removed, rim higher than the floor in at least 7 of 8 directions | A crater is a hole. Mesas, rocks, slopes and channels are rejected |
 
 The new site appears in the **Site** selector.
 
@@ -146,6 +172,7 @@ The new site appears in the **Site** selector.
 ```
 scripts/
   procesar.py        crops a site, computes slope and roughness, exports layers and HiRISE tiles
+  crateres.py        detects craters with the YOLO model (best.pt) and writes crateres.json
   geologia.py        rasterizes the USGS geologic map into a colored layer
   descargar_zona.py  searches the USGS STAC catalog for CTX/HiRISE DTMs around a point
   revisar_tif.py     prints the info of a GeoTIFF
@@ -158,6 +185,9 @@ docs/                the web app (this folder is what GitHub Pages publishes)
   js/vista3d.js      3D table
   js/casco.js        first-person visor
   js/replay.js       Perseverance replay
+  js/crateres.js     crater layer, craters on the route, "Select zone" tool
+  js/explorador.js   crater explorer (detail map, list, filters, crater card)
+  js/habitat3d.js    3D habitat model (3D table and visor)
   js/idioma.js       English / Spanish texts
   data/zonas/<site>/ processed data of each site
   sw.js              offline mode

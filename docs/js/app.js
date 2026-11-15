@@ -145,6 +145,9 @@ async function iniciar() {
   // se dibuja como linea blanca. La Mesa 3D tambien lo usa.
   await cargarRecorridoRover();
 
+  // --- Crateres detectados con YOLO (crateres.js, opcional) ---
+  if (window.iniciarCrateres) await iniciarCrateres();
+
   // --- Eventos ---
   mapa.on("click", alTocarMapa);
   // lectura de coordenadas, altura y pendiente bajo el cursor
@@ -156,7 +159,8 @@ async function iniciar() {
     const z = cuad.elevacion[celda], p = cuad.pendiente[celda];
     caja.textContent = `${lat.toFixed(4)}° N · ${lon.toFixed(4)}° E` +
       (z > -99999 ? `   ${Math.round(z).toLocaleString("en-US")} m` : "") +
-      (p >= 0 ? `   ${t("pendiente_corta")} ${(p / 10).toFixed(1)}°` : "");
+      (p >= 0 ? `   ${t("pendiente_corta")} ${(p / 10).toFixed(1)}°` : "") +
+      (window.textoCraterEn ? textoCraterEn(e.latlng) : "");
   });
   document.getElementById("btn-borrar").addEventListener("click", borrarMision);
   document.getElementById("btn-quitar").addEventListener("click", quitarUltima);
@@ -333,6 +337,7 @@ function nombreParada(k) {
 
 // ---------- Interaccion ----------
 function alTocarMapa(e) {
+  if (window.modoZona) return; // se esta seleccionando una zona (crateres.js)
   const celda = mapaACelda(e.latlng);
   if (celda === null) {
     decir("i_fuera");
@@ -388,6 +393,7 @@ function calcular() {
     ocultarResultado();
     ultimaMision = null;
     actualizarHud();
+    if (window.crateresRuta) crateresRuta(null);
     return;
   }
 
@@ -401,6 +407,7 @@ function calcular() {
     ocultarResultado();
     ultimaMision = null;
     actualizarHud();
+    if (window.crateresRuta) crateresRuta(null);
     return;
   }
 
@@ -415,6 +422,7 @@ function calcular() {
   });
 
   ultimaMision = m;
+  if (window.crateresRuta) crateresRuta(m); // crateres que toca la ruta (se resaltan y se listan)
   mostrarPanel(m, params);
   dibujarPerfil(m);
   actualizarHud();
@@ -627,6 +635,7 @@ function borrarMision() {
   lineas.forEach((l) => l.remove());
   if (capaRegreso) capaRegreso.remove();
   marcadores = []; lineas = []; paradas = []; capaRegreso = null; ultimaMision = null;
+  if (window.crateresRuta) crateresRuta(null);
   ocultarResultado();
   actualizarHud();
   decir("i_habitat");

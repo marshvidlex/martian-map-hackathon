@@ -6,6 +6,7 @@
 // Usa globales de app.js / ruta.js: info, cuad, pois, celdaAMapa, lonlatAMapa, costoPaso.
 
 import * as THREE from "three";
+import { crearHabitat, animarHabitat } from "./habitat3d.js";
 
 const OJOS = 1.7;        // m sobre el suelo
 const BAJAR_CTX = 3;     // el terreno lejano va 3 m abajo para que HiRISE quede encima
@@ -29,6 +30,9 @@ let ruta = null;            // puntos de la mision con distancia y tiempo acumul
 let sim = null;             // estado de la simulacion
 let cabeza = { yaw: 0, pitch: -0.05 }; // a donde voltea el astronauta (relativo al camino)
 let chevrones = [], balizas = null;
+let grupoCrateres = null, idsCrateresRuta = new Set(); // crateres YOLO cerca del astronauta
+let habitat = null; // modelo 3D del habitat a tamano real (el astronauta sale por la esclusa)
+const RADIO_CRATERES = 450; // m alrededor del astronauta en los que se dibujan los crateres
 const reloj = new THREE.Timer();
 const activos = new Set(["mapa"]); // paneles del HUD abiertos (el minimapa empieza abierto)
 
@@ -324,6 +328,72 @@ function crearBalizas() {
   escena.add(balizas);
 }
 
+// ================= Crateres (YOLO) =================
+// Anillos sobre el suelo en el borde de cada crater cercano. Se rehacen cada segundo: asi siguen
+// el relieve HiRISE cuando terminan de cargar las teselas. Ambar = crater que toca la ruta.
+function actualizarCrateres(x, s) {
+  if (grupoCrateres) {
+    escena.remove(grupoCrateres);
+    grupoCrateres.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material) { if (o.material.map) o.material.map.dispose(); o.material.dispose(); } });
+    grupoCrateres = null;
+  }
+  if (!window.crateresCerca) return;
+  const cerca = window.crateresCerca(x, s, RADIO_CRATERES);
+  if (!cerca.length) return;
+  grupoCrateres = new THREE.Group();
+  const pos = [], col = [];
+  const ambar = new THREE.Color("#ffb547"), blanco = new THREE.Color("#fff6ea");
+  for (const c of cerca) {
+    const ruta = idsCrateresRuta.has(c.id);
+    const color = ruta ? ambar : blanco;
+    const n = Math.min(96, Math.max(24, Math.round(c.d * 1.5)));
+    let prev = null;
+    for (let k = 0; k <= n; k++) {
+      const a = (k / n) * Math.PI * 2;
+      const px = c.x + Math.cos(a) * c.d / 2, ps = c.s + Math.sin(a) * c.d / 2;
+      const p = a3D(px, ps, alturaSuelo(px, ps) + 0.25);
+      if (prev) { pos.push(prev.x, prev.y, prev.z, p.x, p.y, p.z); col.push(color.r, color.g, color.b, color.r, color.g, color.b); }
+      prev = p;
+    }
+    // letrero solo para los crateres de la ruta y los grandes cercanos
+    const dist = Math.hypot(c.x - x, c.s - s);
+    if (ruta || (c.d >= 20 && dist < 250)) {
+      const et = letrero(`◯ ${Math.round(c.d)} m`, ruta ? "#ffb547" : "#fff6ea");
+      et.scale.multiplyScalar(0.7);
+      et.position.copy(a3D(c.x, c.s, alturaSuelo(c.x, c.s) + Math.max(3, c.d * 0.15)));
+      grupoCrateres.add(et);
+    }
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute("color", new THREE.Float32BufferAttribute(col, 3));
+  const lineas = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.85 }));
+  grupoCrateres.add(lineas);
+  escena.add(grupoCrateres);
+}
+
+// Habitat a tamano real: la puerta de la esclusa queda junto al punto de salida, mirando al camino
+function ponerHabitat() {
+  if (habitat) { escena.remove(habitat); habitat = null; }
+  if (ruta.rover) return;
+  habitat = crearHabitat();
+  const ini = { x: ruta.x[0], s: ruta.s[0] };
+  const q = posicionPorDistancia(15);
+  const ang = Math.atan2(q.x - ini.x, q.s - ini.s) || 0;  // direccion de salida (x este, s sur)
+  // el centro del habitat va 14 m detras de la puerta
+  habitat.userData.x = ini.x - Math.sin(ang) * 14;
+  habitat.userData.s = ini.s - Math.cos(ang) * 14;
+  habitat.rotation.y = ang; // +z local (esclusa) apunta hacia el camino
+  asentarHabitat();
+  escena.add(habitat);
+}
+// La altura se corrige cuando cargan las teselas HiRISE
+function asentarHabitat() {
+  if (!habitat) return;
+  const { x, s } = habitat.userData;
+  habitat.position.copy(a3D(x, s, alturaSuelo(x, s) - 0.1));
+}
+
 // ================= Escena =================
 function crearEscena() {
   renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -546,6 +616,16 @@ function revisarAdelante(d) {
     if (pend > sim.params.pendienteMax * 0.7) return { texto: t("a_pendiente", { d: dd, g: pend.toFixed(0) }), tipo: "aviso" };
     if (cuad.rugosidad && cuad.rugosidad[celda] / 100 > sim.params.rugosidadMax * 0.6) return { texto: t("a_rugoso", { d: dd }), tipo: "aviso" };
   }
+  // borde de un crater en los proximos 40 m (solo si ahora no estas dentro de el)
+  if (window.craterEn) {
+    const aqui = posicionPorDistancia(d);
+    const yaDentro = window.craterEn(aqui.x, aqui.s);
+    for (let dd = 5; dd <= 40; dd += 5) {
+      const p = posicionPorDistancia(d + dd);
+      const c = window.craterEn(p.x, p.s);
+      if (c && c !== yaDentro && c.d >= 4) return { texto: t("a_crater", { d: dd, c: Math.round(c.d) }), tipo: "aviso" };
+    }
+  }
   return null;
 }
 
@@ -556,6 +636,14 @@ function dibujarMinimapa(p) {
   ctx.fillStyle = "rgba(11,15,23,0.6)"; ctx.fillRect(0, 0, W, H);
   const esc = Math.min(W / info.ancho_m, H / info.alto_m);
   const X = (x) => x * esc + (W - info.ancho_m * esc) / 2, Y = (s) => s * esc + (H - info.alto_m * esc) / 2;
+  if (window.crateresVisibles) {
+    for (const c of crateresVisibles()) {
+      const ruta_ = idsCrateresRuta.has(c.id);
+      if (c.d < 40 && !ruta_) continue;
+      ctx.strokeStyle = ruta_ ? "#FFB547" : "rgba(255,246,234,0.45)"; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(X(c.x), Y(c.s), Math.max(1.2, (c.d / 2) * esc), 0, 7); ctx.stroke();
+    }
+  }
   ctx.strokeStyle = "#4FD1E8"; ctx.lineWidth = 2; ctx.beginPath();
   ruta.x.forEach((x, i) => (i ? ctx.lineTo(X(x), Y(ruta.s[i])) : ctx.moveTo(X(x), Y(ruta.s[i]))));
   ctx.stroke();
@@ -615,7 +703,13 @@ function paso() {
     actualizarTeselas(p.x, p.s);
     sim.ultimaRevision = performance.now();
   }
+  if (performance.now() - sim.ultimosCrateres > 1000) {
+    actualizarCrateres(p.x, p.s);
+    asentarHabitat();
+    sim.ultimosCrateres = performance.now();
+  }
   actualizarChevrones(p.d);
+  animarHabitat(habitat);
   actualizarHud();
   renderer.render(escena, camara);
 }
@@ -656,6 +750,7 @@ async function abrirCasco(mision, params, nombres, paradas) {
   try {
     await prepararEscena();
     ponerModo(false);
+    idsCrateresRuta = new Set((window.crateresDeMision ? crateresDeMision(mision) : []).map((e) => e.c.id));
     empezar(armarRuta(mision, params, nombres, paradas), params, 60, !indice ? t("a_sin_hirise")
       : indice.conFoto.size ? t("a_aprobada")
       : t("a_sin_foto"));
@@ -666,6 +761,7 @@ async function abrirCascoRover(rv, params) {
   try {
     await prepararEscena();
     ponerModo(true);
+    idsCrateresRuta = new Set();
     empezar(armarRutaRover(rv), params, 2000, t("rv_inicio"));
   } catch (e) { falloAlAbrir(e); }
 }
@@ -681,8 +777,9 @@ function empezar(nuevaRuta, params, multiplicador, mensaje) {
   ruta = nuevaRuta;
   if (balizas) escena.remove(balizas);
   crearBalizas();
+  ponerHabitat();
   sim = { t: 0, pausa: false, multiplicador, params, pos: null, y: null,
-          rumboCamino: rumbo({ x: ruta.x[0], s: ruta.s[0] }, posicionPorDistancia(6)), ultimaRevision: 0 };
+          rumboCamino: rumbo({ x: ruta.x[0], s: ruta.s[0] }, posicionPorDistancia(6)), ultimaRevision: 0, ultimosCrateres: 0 };
   mirarAlFrente();
   $("hc-resumen").classList.add("oculto");
   document.querySelectorAll("#hc-velocidad button").forEach((b) => b.classList.toggle("activo", Number(b.dataset.x) === multiplicador));

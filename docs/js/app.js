@@ -123,6 +123,11 @@ async function iniciar() {
       .addTo(mapa);
   }
 
+  // --- Recorrido real de Perseverance (opcional) ---
+  // Si en la carpeta de la zona esta M20_traverse.json (el GeoJSON de NASA "Where is Perseverance?"),
+  // se dibuja como linea blanca. La Mesa 3D tambien lo usa.
+  await cargarRecorridoRover();
+
   // --- Eventos ---
   mapa.on("click", alTocarMapa);
   mapa.on("mousemove", (e) => {
@@ -147,6 +152,52 @@ async function iniciar() {
   document.querySelectorAll("details input").forEach((inp) =>
     inp.addEventListener("change", () => { calcular(); dibujarZonaRegreso(); })
   );
+}
+
+// ---------- Recorrido real de Perseverance ----------
+window.recorridoRover = []; // lineas en metros del mapa: [[lat_m, lng_m], ...]
+
+async function cargarRecorridoRover() {
+  let geo = null;
+  try {
+    const r = await fetch(DATOS + "M20_traverse.json");
+    if (r.ok) geo = await r.json();
+  } catch { geo = null; }
+  if (!geo) return; // no hay archivo: la app funciona igual
+  window.recorridoRover = recortarRecorrido(geo);
+  if (!window.recorridoRover.length) return;
+
+  const capa = L.layerGroup(window.recorridoRover.map((l) =>
+    L.polyline(l, { color: "#ffffff", weight: 2, opacity: 0.9, interactive: false })));
+  document.getElementById("capas-extra").insertAdjacentHTML("beforeend", `
+    <div class="capa"><label><input type="checkbox" id="chk-rover" checked>
+      Perseverance real traverse (NASA/JPL)</label></div>`);
+  const chk = document.getElementById("chk-rover");
+  capa.addTo(mapa);
+  chk.addEventListener("change", () => (chk.checked ? capa.addTo(mapa) : capa.remove()));
+}
+
+// Se queda solo con los pedazos del recorrido que caen dentro de la zona
+function recortarRecorrido(geo) {
+  const salida = [];
+  for (const f of geo.features || []) {
+    const g = f.geometry;
+    if (!g) continue;
+    const partes = g.type === "LineString" ? [g.coordinates]
+      : g.type === "MultiLineString" ? g.coordinates : [];
+    for (const parte of partes) {
+      let actual = [];
+      for (const c of parte) {
+        let [lon, lat] = c;
+        if (lon > 180) lon -= 360;
+        const dentro = lat >= info.sur && lat <= info.norte && lon >= info.oeste && lon <= info.este;
+        if (dentro) actual.push(lonlatAMapa(lon, lat));
+        else if (actual.length) { if (actual.length > 1) salida.push(actual); actual = []; }
+      }
+      if (actual.length > 1) salida.push(actual);
+    }
+  }
+  return salida;
 }
 
 // ---------- Conversiones ----------

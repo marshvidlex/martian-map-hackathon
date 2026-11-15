@@ -12,6 +12,9 @@ let zmin = 0;
 let exageracion = 2.5;
 let recorrido = null; // animacion de "recorrer ruta"
 let grupoGeologia = null; // nombres de las unidades geologicas (solo con esa capa)
+let vuelo = null;         // animacion de la camara cuando te acercas a un punto
+let lugares = [];         // puntos a los que se puede ir: { nombre, pos }
+const DIST_CERCA = 1200;   // metros entre la camara y el punto al acercarse
 
 // ---------- Conversiones: metros del mapa -> coordenadas 3D ----------
 // En 3D: x = este, y = arriba, z = sur (el norte queda hacia -z)
@@ -92,7 +95,18 @@ async function ponerTextura(capa) {
   canvas.height = foto.height;
   const ctx = canvas.getContext("2d");
   ctx.drawImage(foto, 0, 0);
-  if (capa !== "foto") {
+  if (capa === "geologia") {
+    // estilo de las imagenes de NASA: el color de la unidad encima pero se sigue viendo el relieve
+    const encima = await cargarImagen(`${window.DATOS}${capa}.png`);
+    ctx.filter = "blur(3px)";                 // orillas suaves entre unidades
+    ctx.globalCompositeOperation = "color";   // toma el color de la unidad y la luz de la foto
+    ctx.drawImage(encima, 0, 0, canvas.width, canvas.height);
+    ctx.globalCompositeOperation = "source-over";
+    ctx.globalAlpha = 0.3;                    // un poco mas de color para que se note
+    ctx.drawImage(encima, 0, 0, canvas.width, canvas.height);
+    ctx.filter = "none";
+    ctx.globalAlpha = 1;
+  } else if (capa !== "foto") {
     const encima = await cargarImagen(`${window.DATOS}${capa}.png`);
     ctx.imageSmoothingEnabled = false;
     ctx.globalAlpha = 0.75;
@@ -114,7 +128,7 @@ function mostrarGeologia(visible) {
   for (const u of info.geologia) {
     if (!u.letrero) continue;
     const [lat, lng] = lonlatAMapa(u.lon, u.lat);
-    const s = letrero(u.nombre, u.color, 120);
+    const s = letrero(u.nombre, "#ffffff", 200, true);
     s.position.copy(a3D(lat, lng, 220));
     grupoGeologia.add(s);
   }
@@ -122,15 +136,21 @@ function mostrarGeologia(visible) {
 }
 
 // Letrero que siempre mira a la camara (para H, 1, 2... y puntos de interes)
-function letrero(texto, color, alto) {
+function letrero(texto, color, alto, sinFondo = false) {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
-  ctx.font = "bold 56px sans-serif";
+  const fuente = sinFondo ? "italic 56px sans-serif" : "bold 56px sans-serif";
+  ctx.font = fuente;
   canvas.width = Math.ceil(ctx.measureText(texto).width) + 40; // el ancho depende del texto
   canvas.height = 96;
-  ctx.font = "bold 56px sans-serif"; // al cambiar el tamano del canvas se borra la fuente
-  ctx.fillStyle = "rgba(0,0,0,0.65)";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.font = fuente; // al cambiar el tamano del canvas se borra la fuente
+  if (sinFondo) {
+    ctx.shadowColor = "rgba(0,0,0,0.9)"; // sombra para que se lea sobre cualquier color
+    ctx.shadowBlur = 8;
+  } else {
+    ctx.fillStyle = "rgba(0,0,0,0.65)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
   ctx.fillStyle = color;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
@@ -162,9 +182,32 @@ function dibujarMision() {
     });
   }
 
+  // Recorrido real de Perseverance (linea blanca, como en las imagenes de NASA)
+  const chkRover = document.getElementById("chk-rover");
+  if ((window.recorridoRover || []).length && (!chkRover || chkRover.checked)) {
+    const blanco = new THREE.MeshBasicMaterial({ color: "#ffffff" });
+    let masLarga = null;
+    for (const l of window.recorridoRover) {
+      const pts = l.filter((_, j) => j % 3 === 0 || j === l.length - 1).map(([lat, lng]) => a3D(lat, lng, 5));
+      if (pts.length < 2) continue;
+      const curva = new THREE.CatmullRomCurve3(pts);
+      grupoMision.add(new THREE.Mesh(new THREE.TubeGeometry(curva, pts.length * 2, 5, 5, false), blanco));
+      if (!masLarga || l.length > masLarga.length) masLarga = l;
+    }
+    if (masLarga) {
+      const [lat, lng] = masLarga[Math.floor(masLarga.length / 2)];
+      const s = letrero("Perseverance traverse", "#ffffff", 170, true);
+      s.position.copy(a3D(lat, lng, 180));
+      grupoMision.add(s);
+    }
+  }
+
+  lugares = [];
   paradas.forEach((c, k) => {
     const s = letrero(k === 0 ? "H" : String(k), k === 0 ? "#e8794a" : "#00e5ff", 160);
     s.position.copy(celdaA3D(c, 200));
+    s.userData.lugar = lugares.length; // al tocar el letrero, la camara va a este punto
+    lugares.push({ nombre: k === 0 ? "Habitat" : `${k}. ${nombreParada(k)}`, pos: celdaA3D(c, 0) });
     grupoMision.add(s);
   });
 
@@ -172,6 +215,8 @@ function dibujarMision() {
     const [lat, lng] = lonlatAMapa(p.lon, p.lat);
     const s = letrero(p.nombre, "#ffd23f", 110);
     s.position.copy(a3D(lat, lng, 300));
+    s.userData.lugar = lugares.length;
+    lugares.push({ nombre: p.nombre, pos: a3D(lat, lng, 0) });
     grupoMision.add(s);
     const poste = new THREE.Mesh(
       new THREE.CylinderGeometry(6, 6, 260, 6),
@@ -180,6 +225,76 @@ function dibujarMision() {
     poste.position.copy(a3D(lat, lng, 130));
     grupoMision.add(poste);
   }
+}
+
+// Selector "Go to": vista completa + habitat, paradas y puntos de interes
+function llenarSelectorLugares() {
+  const sel = document.getElementById("sel-ir3d");
+  sel.innerHTML = `<option value="-1">Whole site</option>` +
+    lugares.map((l, i) => `<option value="${i}">${l.nombre}</option>`).join("");
+}
+
+// ---------- Acercarse a un punto ----------
+// La camara vuela suave (1.2 s) hasta quedar a DIST_CERCA del punto, desde la misma direccion
+function volarA(objetivo, distancia = DIST_CERCA) {
+  const dir = camara.position.clone().sub(controles.target).normalize();
+  if (dir.y < 0.35) { dir.y = 0.35; dir.normalize(); } // que no quede a ras del suelo
+  iniciarVuelo(objetivo.clone().addScaledVector(dir, distancia), objetivo.clone());
+}
+
+function iniciarVuelo(posCamara, objetivo) {
+  if (recorrido) detenerRecorrido();
+  vuelo = { t0: performance.now(), dur: 1200,
+    desdeCam: camara.position.clone(), haciaCam: posCamara,
+    desdeObj: controles.target.clone(), haciaObj: objetivo };
+}
+
+function pasoVuelo() {
+  const k = Math.min(1, (performance.now() - vuelo.t0) / vuelo.dur);
+  const e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; // arranca y frena suave
+  camara.position.lerpVectors(vuelo.desdeCam, vuelo.haciaCam, e);
+  controles.target.lerpVectors(vuelo.desdeObj, vuelo.haciaObj, e);
+  if (k >= 1) vuelo = null;
+}
+
+function irALugar(i) {
+  if (i < 0) {
+    const v = vistaCompleta();
+    iniciarVuelo(v.camara, v.objetivo);
+  } else if (lugares[i]) {
+    volarA(lugares[i].pos);
+  }
+}
+
+// Toque corto en un letrero = ir a ese punto. Doble clic en el terreno = acercarse ahi.
+const rayo = new THREE.Raycaster();
+let toque = null;
+function puntoPantalla(ev) {
+  const r = renderer.domElement.getBoundingClientRect();
+  return new THREE.Vector2(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
+}
+function conectarClics() {
+  const el = renderer.domElement;
+  el.addEventListener("pointerdown", (ev) => { toque = { x: ev.clientX, y: ev.clientY, t: performance.now() }; });
+  el.addEventListener("pointerup", (ev) => {
+    if (!toque) return;
+    const corto = Math.hypot(ev.clientX - toque.x, ev.clientY - toque.y) < 6 && performance.now() - toque.t < 400;
+    toque = null;
+    if (!corto) return; // fue arrastre para girar la camara
+    rayo.setFromCamera(puntoPantalla(ev), camara);
+    const letreros = grupoMision.children.filter((o) => o.isSprite && o.userData.lugar !== undefined);
+    const tocado = rayo.intersectObjects(letreros)[0];
+    if (tocado) {
+      const i = tocado.object.userData.lugar;
+      document.getElementById("sel-ir3d").value = String(i);
+      irALugar(i);
+    }
+  });
+  el.addEventListener("dblclick", (ev) => {
+    rayo.setFromCamera(puntoPantalla(ev), camara);
+    const golpe = rayo.intersectObject(terreno)[0];
+    if (golpe) volarA(golpe.point, DIST_CERCA * 0.7);
+  });
 }
 
 // ---------- Recorrer la ruta como dron ----------
@@ -220,13 +335,18 @@ function pasoRecorrido(dt) {
 }
 
 // Pone la camara a la distancia justa para que quepa todo el terreno (sirve en tablet vertical)
-function encuadrar() {
+function vistaCompleta() {
   const mitadFov = THREE.MathUtils.degToRad(camara.fov / 2);
   const mitadFovH = Math.atan(Math.tan(mitadFov) * camara.aspect);
   const lado = Math.max(info.ancho_m, info.alto_m) / 2;
   const distancia = (lado / Math.tan(Math.min(mitadFov, mitadFovH))) * 1.15;
-  camara.position.set(0, distancia * 0.6, distancia * 0.8);
-  controles.target.set(0, 0, 0);
+  return { camara: new THREE.Vector3(0, distancia * 0.6, distancia * 0.8), objetivo: new THREE.Vector3(0, 0, 0) };
+}
+
+function encuadrar() {
+  const v = vistaCompleta();
+  camara.position.copy(v.camara);
+  controles.target.copy(v.objetivo);
   controles.update();
 }
 
@@ -245,17 +365,22 @@ async function abrir3D() {
   document.body.classList.add("modo3d");
   if (!renderer) {
     crearEscena();
+    conectarClics();
     llenarSelectorCapas();
     await ponerTextura("foto");
   }
   ajustarTamano();
   encuadrar();
   dibujarMision();
+  llenarSelectorLugares();
   reloj.reset();
   renderer.setAnimationLoop(() => {
     reloj.update();
     if (recorrido) pasoRecorrido(reloj.getDelta());
-    else controles.update();
+    else {
+      if (vuelo) pasoVuelo();
+      controles.update();
+    }
     renderer.render(escena, camara);
   });
 }
@@ -283,6 +408,7 @@ document.getElementById("rng-exagera").addEventListener("input", (e) => {
   document.getElementById("txt-exagera").textContent = exageracion + "x";
   actualizarAlturas();
   dibujarMision();
+  llenarSelectorLugares();
   if (grupoGeologia) mostrarGeologia(true);
 });
 // Desde la mesa de planeacion tambien se puede aprobar y salir al casco
@@ -293,3 +419,4 @@ document.getElementById("btn-aprobar3d").addEventListener("click", () => {
 document.getElementById("btn-recorrer").addEventListener("click", () =>
   recorrido ? detenerRecorrido() : iniciarRecorrido()
 );
+document.getElementById("sel-ir3d").addEventListener("change", (e) => irALugar(parseInt(e.target.value, 10)));

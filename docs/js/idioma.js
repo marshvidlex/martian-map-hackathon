@@ -6,6 +6,11 @@
 
 const TEXTOS = {
   en: {
+    modo_marte: "Mars", m_cerrar: "Go to planner &rarr;", m_paso: "STEP 1", m_titulo: "Choose a landing site",
+    m_sin_red: "Mars map not found. Run scripts/cortar_marte.py. The sites still work.", m_ley_listo: "Ready to plan an EVA",
+    m_ley_info: "Past landing site (info)", m_credito: "Viking MDIM 2.1 color mosaic · NASA/JPL/USGS", m_sitios: "LANDING SITES",
+    m_entrar: "PLAN AN EVA HERE", m_nota: "Any site with a CTX or HiRISE elevation model can be added with procesar.py.",
+    m_listo: "READY", m_listo_largo: "Terrain data ready", m_sin_datos: "Terrain data not processed yet",
     // --- barra superior ---
     sub: "MARSWALK PLANNER", modo_plan: "Plan", modo_3d: "3D table", modo_visor: "Visor", sitio: "SITE",
     sin_mision_chip: "NO MISSION",
@@ -92,6 +97,11 @@ const TEXTOS = {
   },
 
   es: {
+    modo_marte: "Marte", m_cerrar: "Ir al planeador &rarr;", m_paso: "PASO 1", m_titulo: "Elige un sitio de aterrizaje",
+    m_sin_red: "Falta el mapa de Marte. Corre scripts/cortar_marte.py. Los sitios funcionan igual.", m_ley_listo: "Listo para planear una caminata",
+    m_ley_info: "Sitio de aterrizaje anterior (info)", m_credito: "Mosaico a color Viking MDIM 2.1 · NASA/JPL/USGS", m_sitios: "SITIOS DE ATERRIZAJE",
+    m_entrar: "PLANEAR UNA CAMINATA AQUÍ", m_nota: "Cualquier sitio con modelo de elevación CTX o HiRISE se puede agregar con procesar.py.",
+    m_listo: "LISTO", m_listo_largo: "Datos del terreno listos", m_sin_datos: "Datos del terreno sin procesar",
     sub: "PLANEADOR DE MARSWALK", modo_plan: "Planear", modo_3d: "Mesa 3D", modo_visor: "Visor", sitio: "SITIO",
     sin_mision_chip: "SIN MISIÓN",
     base: "MAPA BASE", capa_foto: "Foto orbital CTX", capa_elev: "Elevación",

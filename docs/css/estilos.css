@@ -360,3 +360,55 @@ body.modo-rover #hc-iconos [data-panel="parada"] { display: none; }
 
 /* Fotos HiRISE del mapa 2D: suavizadas al acercar */
 .foto-hirise { image-rendering: auto; }
+
+/* =================== Inicio: mapa completo de Marte (marte.js) =================== */
+#inicio { display: none; }
+body.modo-marte #inicio {
+  display: flex; flex-direction: column; position: fixed; inset: 0; z-index: 1500; background: var(--fondo);
+}
+.inicio-barra {
+  display: flex; align-items: center; gap: 16px; padding: 10px 20px;
+  background: var(--panel); border-bottom: 1px solid var(--linea);
+}
+.inicio-cuerpo { flex: 1; min-height: 0; display: flex; }
+#zona-marte { flex: 1; min-width: 0; position: relative; }
+#mapa-marte { position: absolute; inset: 0; background: #120d0a; }
+.inicio-titulo { margin: 4px 0 0; font-size: 20px; font-weight: 600; }
+.leyenda-marte { display: flex; flex-direction: column; gap: 6px; font-family: Inter, system-ui, sans-serif; }
+.leyenda-marte div { display: flex; align-items: center; gap: 8px; }
+.punto-ley { width: 12px; height: 12px; border-radius: 50%; border: 2px solid; flex: none; }
+.punto-ley.listo { background: var(--acento); border-color: var(--acento); }
+.punto-ley.info { background: var(--fondo); border-color: var(--cian); }
+#marte-sin-red { font-size: 13px; color: #FFE2B0; border-color: var(--aviso); }
+
+#panel-sitios {
+  width: 380px; flex: none; overflow-y: auto; padding: 20px; background: var(--panel);
+  border-left: 1px solid var(--linea); display: flex; flex-direction: column; gap: 14px;
+}
+#panel-sitios h2 { margin: 0; }
+#lista-sitios button { min-height: 52px; }
+.sitio-texto { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.sitio-texto b { font-weight: 600; font-size: 14px; }
+.sitio-texto small { font-size: 12px; color: var(--tenue); }
+.chip.chico { padding: 3px 8px; font-size: 10px; }
+.chip.chico::before { display: none; }
+#ficha-sitio {
+  border: 1px solid var(--linea2); border-radius: 14px; padding: 16px; background: var(--caja);
+  display: flex; flex-direction: column; gap: 8px;
+}
+#ficha-sitio h3 { margin: 0; font-size: 20px; }
+#fs-coord { font-size: 12px; color: #C9D1DF; }
+#fs-texto { margin: 4px 0; font-size: 14px; line-height: 1.5; color: #D5DBE6; }
+#fs-estado { align-self: flex-start; }
+#fs-entrar { margin-top: 6px; }
+#fs-nota { margin: 0; }
+.leaflet-tooltip { background: var(--caja); color: var(--texto); border: 1px solid var(--linea2); }
+.leaflet-tooltip-top::before { border-top-color: var(--linea2); }
+
+@media (max-width: 1000px) {
+  .inicio-cuerpo { flex-direction: column; }
+  #zona-marte { height: 55vh; flex: none; }
+  #panel-sitios { width: 100%; border-left: 0; border-top: 1px solid var(--linea); }
+}
+/* los mosaicos se enciman 1 px para que no se vean rayitas entre ellos al hacer zoom */
+#mapa-marte .leaflet-tile { width: 257px !important; height: 257px !important; }

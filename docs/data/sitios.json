@@ -1,0 +1,72 @@
+[
+  {
+    "id": "perseverance", "zona": "jezero",
+    "nombre": "Jezero Crater", "mision": "Perseverance", "agencia": "NASA", "fecha": "2021-02-18",
+    "lat": 18.44, "lon": 77.45,
+    "en": "Ancient lake with a river delta. Perseverance collects rock samples here for a possible return to Earth.",
+    "es": "Antiguo lago con un delta de río. Perseverance recolecta aquí muestras de roca para un posible regreso a la Tierra."
+  },
+  {
+    "id": "curiosity", "zona": "gale",
+    "nombre": "Gale Crater", "mision": "Curiosity", "agencia": "NASA", "fecha": "2012-08-06",
+    "lat": -4.59, "lon": 137.44,
+    "en": "Crater with Mount Sharp in the middle, built from layers of sediment left by an ancient lake.",
+    "es": "Cráter con el monte Sharp en medio, formado por capas de sedimento de un lago antiguo."
+  },
+  {
+    "id": "insight",
+    "nombre": "Elysium Planitia", "mision": "InSight", "agencia": "NASA", "fecha": "2018-11-26",
+    "lat": 4.50, "lon": 135.62,
+    "en": "A flat, smooth plain. InSight measured marsquakes and mapped the crust, mantle and core.",
+    "es": "Una planicie lisa y plana. InSight midió sismos marcianos y estudió la corteza, el manto y el núcleo."
+  },
+  {
+    "id": "spirit",
+    "nombre": "Gusev Crater", "mision": "Spirit", "agencia": "NASA", "fecha": "2004-01-04",
+    "lat": -14.57, "lon": 175.47,
+    "en": "Large crater fed by an old channel. Spirit found mineral evidence of ancient hot water.",
+    "es": "Cráter grande al que llegaba un canal antiguo. Spirit encontró minerales que indican agua caliente en el pasado."
+  },
+  {
+    "id": "opportunity",
+    "nombre": "Meridiani Planum", "mision": "Opportunity", "agencia": "NASA", "fecha": "2004-01-25",
+    "lat": -1.95, "lon": -5.53,
+    "en": "Plains rich in hematite, chosen from orbit. Opportunity found rocks formed in water.",
+    "es": "Planicie rica en hematita, elegida desde la órbita. Opportunity encontró rocas formadas en agua."
+  },
+  {
+    "id": "zhurong",
+    "nombre": "Utopia Planitia", "mision": "Zhurong", "agencia": "CNSA", "fecha": "2021-05-14",
+    "lat": 25.07, "lon": 109.93,
+    "en": "Huge plain in the northern lowlands. Landing site of China's first Mars rover.",
+    "es": "Planicie enorme en las tierras bajas del norte. Sitio del primer rover de China en Marte."
+  },
+  {
+    "id": "viking2",
+    "nombre": "Utopia Planitia (north)", "mision": "Viking 2", "agencia": "NASA", "fecha": "1976-09-03",
+    "lat": 47.64, "lon": 134.29,
+    "en": "Northern plains. Viking 2 worked here for almost four years.",
+    "es": "Planicies del norte. Viking 2 trabajó aquí casi cuatro años."
+  },
+  {
+    "id": "viking1",
+    "nombre": "Chryse Planitia", "mision": "Viking 1", "agencia": "NASA", "fecha": "1976-07-20",
+    "lat": 22.27, "lon": -47.95,
+    "en": "First fully successful landing on Mars. Viking 1 worked for six years.",
+    "es": "Primer aterrizaje totalmente exitoso en Marte. Viking 1 funcionó seis años."
+  },
+  {
+    "id": "pathfinder",
+    "nombre": "Ares Vallis", "mision": "Pathfinder", "agencia": "NASA", "fecha": "1997-07-04",
+    "lat": 19.13, "lon": -33.22,
+    "en": "Mouth of an old flood channel. Delivered Sojourner, the first rover on Mars.",
+    "es": "Desembocadura de un antiguo canal de inundación. Aquí llegó Sojourner, el primer rover en Marte."
+  },
+  {
+    "id": "phoenix",
+    "nombre": "Vastitas Borealis", "mision": "Phoenix", "agencia": "NASA", "fecha": "2008-05-25",
+    "lat": 68.22, "lon": -125.75,
+    "en": "Arctic plains. Phoenix dug a few centimetres and touched water ice.",
+    "es": "Planicies del ártico. Phoenix excavó unos centímetros y tocó hielo de agua."
+  }
+]

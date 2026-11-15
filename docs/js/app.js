@@ -4,6 +4,9 @@
 //   lat de Leaflet = metros hacia el norte, lng de Leaflet = metros hacia el este.
 
 let info, cuad, mapa, pois = [];
+// Limite de pendiente para caminar (grados). Arriba de esto la casilla queda bloqueada.
+// Se puede cambiar en "Mission parameters" sin volver a procesar los datos.
+const LIMITE_PENDIENTE = 15;
 // Carpeta de la zona que se esta viendo (data/zonas/<zona>/). La usan tambien vista3d.js y casco.js
 window.DATOS = "data/";
 let paradas = [];            // indices de celda; paradas[0] es el habitat
@@ -73,7 +76,8 @@ async function iniciar() {
   const capas = {
     foto: L.imageOverlay(DATOS + "foto.png", limites),
     elevacion: L.imageOverlay(DATOS + "elevacion.png", limites),
-    pendiente: L.imageOverlay(DATOS + "pendiente.png", limites, { className: "pixelada" }),
+    // la capa de pendiente se pinta aqui con el limite actual, asi el rojo siempre coincide con lo bloqueado
+    pendiente: L.imageOverlay(pintarPendiente(LIMITE_PENDIENTE), limites, { className: "pixelada" }),
   };
   if (info.tiene_rugosidad) {
     capas.rugosidad = L.imageOverlay(DATOS + "rugosidad.png", limites, { className: "pixelada" });
@@ -111,8 +115,11 @@ async function iniciar() {
     op.addEventListener("input", () => capa.setOpacity(op.value));
   }
 
-  // Los valores por defecto del panel salen de lo que se uso al procesar
-  document.getElementById("p-pendiente").value = info.pendiente_max;
+  // Valores por defecto del panel
+  document.getElementById("p-pendiente").value = LIMITE_PENDIENTE;
+  document.getElementById("p-pendiente").addEventListener("change", (e) => {
+    capas.pendiente.setUrl(pintarPendiente(parseFloat(e.target.value) || LIMITE_PENDIENTE));
+  });
   if (info.rugosidad_max) document.getElementById("p-rugosidad").value = info.rugosidad_max;
 
   // --- Puntos de interes (con foto opcional) ---
@@ -161,6 +168,28 @@ async function iniciar() {
   document.querySelectorAll("details input").forEach((inp) =>
     inp.addEventListener("change", () => { calcular(); dibujarZonaRegreso(); })
   );
+}
+
+// ---------- Capa de pendiente ----------
+// Colores: de morado (plano) a amarillo (cerca del limite); rojo = pasa el limite o sin datos
+function pintarPendiente(limite) {
+  const canvas = document.createElement("canvas");
+  canvas.width = cuad.ancho;
+  canvas.height = cuad.alto;
+  const ctx = canvas.getContext("2d");
+  const img = ctx.createImageData(cuad.ancho, cuad.alto);
+  const tonos = [[59, 42, 107], [42, 157, 143], [244, 211, 94]];
+  for (let i = 0; i < cuad.pendiente.length; i++) {
+    const p = cuad.pendiente[i];
+    if (p < 0 || p / 10 > limite) { img.data.set([230, 40, 40, 235], i * 4); continue; }
+    const f = Math.min(1, p / 10 / limite);
+    const k = f < 0.5 ? 0 : 1, u = f < 0.5 ? f * 2 : (f - 0.5) * 2;
+    const a = tonos[k], b = tonos[k + 1];
+    img.data.set([a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u, a[2] + (b[2] - a[2]) * u, 255], i * 4);
+  }
+  ctx.putImageData(img, 0, 0);
+  window.urlPendiente = canvas.toDataURL(); // la Mesa 3D usa esta misma imagen
+  return window.urlPendiente;
 }
 
 // ---------- Recorrido real de Perseverance ----------

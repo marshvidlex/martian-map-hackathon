@@ -479,7 +479,7 @@ function revisarAdelante(d) {
     const celda = mapaACelda({ lat: info.alto_m - p.s, lng: p.x });
     if (celda === null) continue;
     const pend = cuad.pendiente[celda] / 10;
-    if (pend > Math.max(15, sim.params.pendienteMax * 0.7)) return { texto: t("a_pendiente", { d: dd, g: pend.toFixed(0) }), tipo: "aviso" };
+    if (pend > sim.params.pendienteMax * 0.7) return { texto: t("a_pendiente", { d: dd, g: pend.toFixed(0) }), tipo: "aviso" };
     if (cuad.rugosidad && cuad.rugosidad[celda] / 100 > sim.params.rugosidadMax * 0.6) return { texto: t("a_rugoso", { d: dd }), tipo: "aviso" };
   }
   return null;

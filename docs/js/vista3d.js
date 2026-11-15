@@ -107,7 +107,9 @@ async function ponerTextura(capa) {
     ctx.filter = "none";
     ctx.globalAlpha = 1;
   } else if (capa !== "foto") {
-    const encima = await cargarImagen(`${window.DATOS}${capa}.png`);
+    // la pendiente sale de la imagen que pinta app.js con el limite actual
+    const fuente = capa === "pendiente" && window.urlPendiente ? window.urlPendiente : `${window.DATOS}${capa}.png`;
+    const encima = await cargarImagen(fuente);
     ctx.imageSmoothingEnabled = false;
     ctx.globalAlpha = 0.75;
     ctx.drawImage(encima, 0, 0, canvas.width, canvas.height);
